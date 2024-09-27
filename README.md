@@ -1,2 +1,2 @@
 # DroidMDO
-Implementation of MsDroid paper
+پیاده‌سازی مقاله `MsDroid` که به صورت گزارش مرحله به مرحله در این repository گزارش می‌گردد.
