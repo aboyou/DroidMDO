@@ -1,2 +1,2 @@
-# MsDroid
+# DroidMDO
 Implementation of MsDroid paper
