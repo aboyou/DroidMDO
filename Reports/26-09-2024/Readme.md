@@ -23,3 +23,4 @@ settings = {
     call_graphs = myandro.get_call_graphs()
 ```
 
+### کلاس `AndroGen`
