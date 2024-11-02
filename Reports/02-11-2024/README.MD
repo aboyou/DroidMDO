@@ -8,13 +8,17 @@
 
 ## پیش‌پردازش
 
-ییی
+![preprocess](https://github.com/aboyou/DroidMDO/blob/main/Reports/02-11-2024/images/03.png)
 
 این مرحله تمامی feature هایی که باید از فایل‌های APK استخراج گردد را خارج می‌کند. این featureها عبارتند از:
 ### 1. گراف فراخوانی هر فایل APK
 در این گراف، هر گره یک method است و هرگاه فراخوانی بین method ها رخ دهد، یک یال بین این گره‌ها ایجاد می‌گردد.
 
-ییی
+![callgraph1](https://github.com/aboyou/DroidMDO/blob/main/Reports/02-11-2024/images/01.png)
+
+![cg2](https://github.com/aboyou/DroidMDO/blob/main/Reports/02-11-2024/images/02.png)
+
+![cg3](https://github.com/aboyou/DroidMDO/blob/main/Reports/02-11-2024/images/07.png)
 
 ### 2. آپکودها
 در ابتدا یک تناسب بین هر گره با یک id یکتا ایجاد می‌شود. سپس بر اساس این ارتباط، برای method مرتبط با هر گره، opcode هایی که در آن method وجود دارند، علامت می‌خورند.
