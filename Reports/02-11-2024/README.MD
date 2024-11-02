@@ -23,17 +23,22 @@
 ### 2. آپکودها
 در ابتدا یک تناسب بین هر گره با یک id یکتا ایجاد می‌شود. سپس بر اساس این ارتباط، برای method مرتبط با هر گره، opcode هایی که در آن method وجود دارند، علامت می‌خورند.
 
-ییی
+![oc1](https://github.com/aboyou/DroidMDO/blob/main/Reports/02-11-2024/images/04.png)
+
+![oc2](https://github.com/aboyou/DroidMDO/blob/main/Reports/02-11-2024/images/08.png)
 
 ### 3. مجوزها
 از قبل permission های حساس در نظر گرفته شده‌اند. بر اساس این permission ها، هر کدام از گره‌ها که شامل این permission ها باشد مشخص می‌گردد.
+![per1](https://github.com/aboyou/DroidMDO/blob/main/Reports/02-11-2024/images/05.png)
 
-ییی
+![per2](https://github.com/aboyou/DroidMDO/blob/main/Reports/02-11-2024/images/09.png)
 
 ### 4. وجود و مجوزهای Third-Party Libraries
 در این قسمت وجود third-party libraries در هر گره و این که شامل چه مجوزهایی می‌شوند مشخص می‌گردد. این کار برای بررسی گره‌هایی است به یک TPL اشاره دارند.
 
-ییی
+![tpl1](https://github.com/aboyou/DroidMDO/blob/main/Reports/02-11-2024/images/06.png)
+
+![tpl2](https://github.com/aboyou/DroidMDO/blob/main/Reports/02-11-2024/images/10.png)
 
 
 ## تولید زیرگراف
