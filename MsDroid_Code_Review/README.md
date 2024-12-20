@@ -22,3 +22,4 @@ graph_base = f'./training/Graphs'
 ```Bash
 /home/user/MsDroid2/MsDroid-main/src/Output
 ```
+نکته بعدی آرگومان label است که به صورت پیش‌فرض برابر با 1 در نظر گرفته شده است و منظور آن است که به صورت پیش‌فرض malware در نظر گرفته می‌شود.
