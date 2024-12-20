@@ -12,3 +12,9 @@ python3 train.py -i <input directory (APK dataset)>
 ```Bash
 /home/user/MsDroid2/APKs/Test_DB
 ```
+## فعلا کمی از train.py
+در این اسکریپت در ابتدا دو آدرس تنظیم می‌شوند که در ادامه بسیار کاربردی هستند:
+```Bash
+exp_base = './training/Experiments'
+graph_base = f'./training/Graphs'
+```
