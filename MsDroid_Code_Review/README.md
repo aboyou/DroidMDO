@@ -18,3 +18,7 @@ python3 train.py -i <input directory (APK dataset)>
 exp_base = './training/Experiments'
 graph_base = f'./training/Graphs'
 ```
+در ادامه یکی از آگومان‌های ورودی این اسکریپت output است که به صورت پیش‌فرض دایرکتوری Output از همان دایرکتوری است که اسکریپت در آن قرار دارد. برای مثال در سیستم ما به این صورت است:
+```Bash
+/home/user/MsDroid2/MsDroid-main/src/Output
+```
