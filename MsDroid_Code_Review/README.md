@@ -125,3 +125,17 @@ def generate_feature(apk_base, db_name, output_dir, deepth):
     print("generate feature finished")
     return call_graphs
 ```
+در این تابع، دایرکتوری `db_path` بوجود می‌آید که عبارت است از جمع `apk_base` و `db_name`!  در این مثال ما، `db_path` برابر است با:
+```bash
+/home/user/MsDroid2/APKs/Test_DB
+```
+در ادامه آدرس دایرکتوری `cg_path` تولید می‌گردد که برابر است با:
+```bash
+<output_dir>/<db_name>/decompile/
+```
+در این دایرکتوری، فایل call graph ذخیره می‌گردد.
+پس از آن، آدرس دایرکتوری `feature_path` تولید می‌گردد که برابر است با:
+```bash
+<output_dir>/<db_name>/result/
+```
+برای آنالیز فایل‌های APK از کتابخانه پایتونی Androguard استفاده می‌گردد. کلاس `auto` اینچنین است که قابلیت 
