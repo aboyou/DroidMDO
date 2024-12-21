@@ -62,4 +62,27 @@ data_<apk_id>_<subgraph_id>.pt
 در `train.py` توابع دیگری نیز وجود دارد و همۀ توابع باید بررسی شوند. در موقع آن‌ها نام این توابع به میان خواهد آمد و چگونگی عملکرد آن‌ها بررسی خواهد شد! به همین دلیل هم‌اکنون به بررسی `generate_behavior_subgraph()` پرداخته می‌شود.
 #زیرگراف #تولید #subgraph
 ## درود بر `generate_behavior_subgraph`
-این تابع در فایل `main.py` تعریف شده است. 
+این تابع در فایل `main.py` تعریف شده است. کد این تابع به صورت زیر است:
+```python
+def generate_behavior_subgraph(apk_base, db_name, output_dir, deepth, label, hop=2, tpl=True, training=False, api_map=False):
+    '''
+    <output_dir>/<db_name>/decompile/<apk_name>/call.gml
+    <output_dir>/<db_name>/result/<permission | opcode | tpl>/<apk_name>.csv
+    '''
+    call_graphs = generate_feature(apk_base, db_name, output_dir, deepth)   # `.gml`
+    call_graphs.sort()
+    print("call graph", call_graphs)
+    '''
+    <output_dir>/<db_name>/processed/data_<apk_id>_<subgraph_id>.pt
+    '''
+    gml_base = f'{output_dir}/{db_name}'
+    generate_graph(call_graphs, output_dir, gml_base, db_name, label, hop, tpl, training, api_map)
+    return call_graphs
+```
+این تابع وظیفه آن را دارد که فایل‌ها call graph را ایجاد کند. همچنین نتیجه استخراج ویژگی‌های یک APK را در دایرکتوری‌های زیر ذخیره می‌کند:
+```bash
+<output_dir>/<db_name>/result/tpl/<apk_name>.csv
+<output_dir>/<db_name>/result/opcode/<apk_name>.csv
+<output_dir>/<db_name>/result/permission/<apk_name>.csv
+```
+تابعی که وظیفه ایجاد فایل‌های بالا را بر عهده دارد، `generate_features()` است. 
