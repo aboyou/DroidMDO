@@ -145,3 +145,4 @@ def generate_feature(apk_base, db_name, output_dir, deepth):
 ```
 حال به بررسی کلاس `AndroGen` می‌پردازیم.
 
+### **`AndroGen`**
