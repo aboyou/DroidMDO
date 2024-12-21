@@ -89,3 +89,39 @@ def generate_behavior_subgraph(apk_base, db_name, output_dir, deepth, label, hop
 ما قبل‌تر اشاره کردیم که زیرگراف‌ها در تابع `generate_behavior_subgraph()` تولید می‌گردند. در واقع تابعی که وظیفه اصلی ایجاد این زیرگراف‌ها را برعهده دارد، `generate_graph()` است. این تابع آرگومان‌هایی مانند call graphها را به عنوان ورودی می‌گیرد و خروجی آن زیرگراف‌های ذخیره شده در دایرکتوری مخصوص به خود است. 
 سوال اصلی اینجاست که چگونه featureها بدست می‌آیند؟ به همین منظور ابتدا به قسمت نظری در مقاله می‌پردازیم. برای دریافت مقاله می‌توان لینک روبرو را دنبال کرد: [لینک مقاله](https://ieeexplore.ieee.org/document/9762803)
 ### بدست آوردن ویژگی‌ها (!!features!!)
+این تابع در فایل `main.py_` در دایرکتوری زیر وجود دارد:
+```bash
+/home/user/MsDroid2/MsDroid-main/src/feature/
+```
+در ابتدا به کد این تابع نگاهی می‌اندازیم:
+```python
+import os
+from androguard.core.analysis import auto
+from .Andro.Andro import AndroGen
+def generate_feature(apk_base, db_name, output_dir, deepth):
+    '''
+    save files:
+    <output_dir>/<db_name>/decompile/<apk_name>/call.gml
+    <output_dir>/<db_name>/result/<permission | opcode | tpl>/<apk_name>.csv
+    '''
+    # return all complete paths for `call.gml`
+    db_path = os.path.join(apk_base, db_name)
+    print(db_path)
+    cg_path = os.path.join(output_dir, db_name, "decompile")
+    feature_path = os.path.join(output_dir, db_name, "result")
+    settings = {
+        # The directory `some/directory` should contain some APK files
+        "my": AndroGen(APKpath=db_path, CGPath=cg_path, FeaturePath=feature_path, deepth=deepth),  # apkfile
+        # Use the default Logger
+        "log": auto.DefaultAndroLog,
+        # Use maximum of 2 threads
+        "max_fetcher": 2,
+    }
+    aa = auto.AndroAuto(settings)
+    aa.go()
+    aa.dump()
+    myandro = aa.settings["my"]
+    call_graphs = myandro.get_call_graphs()
+    print("generate feature finished")
+    return call_graphs
+```
