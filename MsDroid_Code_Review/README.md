@@ -31,7 +31,7 @@ graph_base = f'./training/Graphs'
 ### Experiment
 برای هر آزمایش یا همان experiment، یک فایل و دایرکتوری ایجاد می‌شود. آدرس این دایرکتوری به صورت زیر است:
 ```python
-    exp_dir = f'./training/Graphs/{db_name}/HOP_{hop}/TPL_{tpl}'
+exp_dir = f'./training/Graphs/{db_name}/HOP_{hop}/TPL_{tpl}'
 ```
 همانطور که مشاهده می‌گردد، دایرکتوری `training` که مسئول ذخیره اطلاعات آموزش شبکه عصبی است، اطلاعات گرا‌های بوجود آمده را ذخیره می‌نماید. 
 در `train.py` مشاهده می‌گردد که یک شرط وجود دارد و به صورت زیر است:
