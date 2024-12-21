@@ -27,3 +27,35 @@ graph_base = f'./training/Graphs'
 ```Bash
 /home/user/MsDroid2/APKs
 ```
+همچنین نام دیتاست هم در داخل `db_name` ذخیره می‌گردد. در مثال ما `Test_DB` نام دیتاست ما می‌باشد.
+### Experiment
+برای هر آزمایش یا همان experiment، یک فایل و دایرکتوری ایجاد می‌شود. آدرس این دایرکتوری به صورت زیر است:
+```python
+    exp_dir = f'./training/Graphs/{db_name}/HOP_{hop}/TPL_{tpl}'
+```
+همانطور که مشاهده می‌گردد، دایرکتوری `training` که مسئول ذخیره اطلاعات آموزش شبکه عصبی است، اطلاعات گرا‌های بوجود آمده را ذخیره می‌نماید. 
+در `train.py` مشاهده می‌گردد که یک شرط وجود دارد و به صورت زیر است:
+```python
+if not os.path.exists(f'{exp_dir}/dataset.pt'):
+        makedirs('Mappings')
+        import time
+        T1 = time.process_time()    
+        '''
+        ./training/Graphs/<db_name>/processed/data_<apk_id>_<subgraph_id>.pt
+        '''
+        num_apk = generate_behavior_subgraph(apk_base, db_name, output_dir, args.deepth, label, hop=hop, tpl=tpl, training=True, api_map=True)
+        T2 = time.process_time()
+        print(f'Generate Behavior Subgraphs for {num_apk} APKs: {T2-T1}')
+        testonly = True if num_apk==1 else False
+```
+در کد بالا، ابتدا بررسی می‌کند که آیا `dataset.pt` وجود دارد یا خیر! اگر وجود نداشت، دایرکتوری `Mappings` را درون دایرکتوری اصلی می‌سازد. در ادامه با استفاده از تابع `generate_behavior_subgraph()`، زیرگراف‌های رفتاری را می‌سازد و در دایرکتوری زیر ذخیره می‌سازد:
+```bash
+./training/Graphs/<db_name>/processed/
+```
+زیرگراف‌ها در فرمت `pt.*` ذخیره می‌شوند که برای آن است که در ساختارهای PyTorch ای استفاده شوند. نام این فایل‌ها به صورت زیر است:
+```bash
+data_<apk_id>_<subgraph_id>.pt
+```
+این نام‌گذاری نشان می‌دهد که هر فایل APK یک apk_id دریافت می‌کند و هر زیرگراف از هر فایل APK نیز یک ID مخصوص به خود دریافت می‌کند.
+> نکته‌ای که وجود دارد آن است که وقتی هم‌اکنون اسکریپت را اجرا می‌کنیم، تابع `generate_behavior_subgraph()` را به طور کامل درست اجرا نمی‌کند و در میانۀ آن خطا دارد!
+
