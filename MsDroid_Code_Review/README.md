@@ -159,6 +159,7 @@ def generate_feature(apk_base, db_name, output_dir, deepth):
  ['/home/user/MsDroid2/MsDroid-main/src/Output/Test_DB/decompile/1aa440d4f99f709345b44484edd0d31aad29f5c5e00201be6d222fc16a896720/call.gml', '/home/user/MsDroid2/MsDroid-main/src/Output/Test_DB/decompile/1EC3CAC448F523E6286176C6CF12BC1BD3EE485445B4A428FC2655DDBFE505F3/call.gml', '/home/user/MsDroid2/MsDroid-main/src/Output/Test_DB/decompile/2b28128271d07a1e31f3a4eb8318886fba9becd9f1125833aaea5eb89d85ee47/call.gml']
 ```
 حال به بررسی کلاس `AndroGen` می‌پردازیم.
+هدف آن است که بفهمیم چگونه این ویژگی‌ها (features) تولید می‌شوند. حال یا درون کلاس `AndroGen` تولید خواهند شد یا این که از طریق تابع `generate_hgraph()` بدست خواهند آمد.
 
 ### **`AndroGen`**
 این کلاس در فایل پایتونی `Andro.py` در دایرکتوری زیر قرار دارد:
@@ -356,3 +357,31 @@ class AndroGen(auto.DirectoryAndroAnalysis):
         self.has_crashed = True
         _settings.logger.debug("Error during analysis of {}: {}".format(log, why), file=sys.stderr)
 ```
+
+### در ابتدا init
+باید بر این بخش تفصیلی ارائه گردد. در ابتدا باید بر کد این بخش مروری صورت گیرد که معادل است با:
+```python
+def __init__(self, APKpath, CGPath, FeaturePath, deepth):
+        self.replacemap = {'Landroid/os/AsyncTask;': ['onPreExecute', 'doInBackground'],
+                           'Landroid/os/Handler;': ['handleMessage'], 'Ljava/lang/Runnable;': ['run']}
+        super(AndroGen, self).__init__(APKpath)
+        self.APKPath = APKpath
+        self.has_crashed = False
+        self.CGPath = CGPath
+        self.FeaturePath = FeaturePath
+        self.smali_opcode = self.get_smaliOpcode(_settings.smaliOpcodeFilename)
+        self.permission = []
+        with open(_settings.headerfile) as f:
+            self.permission = eval(f.read())
+        self.cppermission = self.get_permission()
+        self.call_graphs = []
+        self.count = 0
+        self.deepth = deepth
+```
+در ابتدا یک جایگزینی صورت می‌پذیرد که برابر است با:
+```python
+self.replacemap = {'Landroid/os/AsyncTask;': ['onPreExecute', 'doInBackground'],
+                           'Landroid/os/Handler;': ['handleMessage'], 'Ljava/lang/Runnable;': ['run']}
+```
+اما خب این به چه معنا است؟! 
+در واقع این نگاشت جایگزینی (replacement) برای هندل کردن کامپوننت‌های اندرویدی استفاده می‌شود که از الگوی خاصی در طراحی پیروی می‌کنند. در واقع کامپوننت‌های `AsyncTask`، `Handler` و `Runnable` 
