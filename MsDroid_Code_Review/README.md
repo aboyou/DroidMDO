@@ -91,6 +91,9 @@ def generate_behavior_subgraph(apk_base, db_name, output_dir, deepth, label, hop
 ## بدست آوردن ویژگی‌ها (!!features!!)
 ### نظری
 
+$$
+v_{per}\
+$$
 
 
 
