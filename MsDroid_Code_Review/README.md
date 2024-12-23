@@ -109,7 +109,7 @@ $$
 /home/user/MsDroid2/MsDroid-main/src/feature/
 ```
 با بررسی استخراج ویژگی‌ها (features) می‌توانیم execution flow را به صورت تصویر زیر در نظر بگیریم:
-![[Execution_Flow_Feature_Generation.png]]
+![[images/Execution_Flow_Feature_Generation.png]]
 
 در ابتدا به کد این تابع نگاهی می‌اندازیم:
 ```python
