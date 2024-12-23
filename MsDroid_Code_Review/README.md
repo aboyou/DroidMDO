@@ -386,3 +386,34 @@ self.replacemap = {'Landroid/os/AsyncTask;': ['onPreExecute', 'doInBackground'],
 اما خب این به چه معنا است؟! 
 
 در واقع این نگاشت جایگزینی (replacement) برای هندل کردن کامپوننت‌های اندرویدی استفاده می‌شود که از الگوی خاصی در طراحی پیروی می‌کنند. در واقع کامپوننت‌های `AsyncTask`، `Handler` و `Runnable` متدهایی دارند که قابلیت اجرای asynchronously را دارا هستند و یا این که override می‌شوند و تسک خاصی را انجام می‌دهند. این متدها برای فهم عملکرد اپلیکیشن‌های اندرویدی حیاتی هستند، به خصوص در آنالیز عملیات‌ههای حیاتی API callها! 
+یک مثال می‌تواند راحت‌تر موضوع را بیان کند:
+```java
+public class MyAsyncTask extends AsyncTask<Void, Void, Void> {
+    @Override
+    protected void onPreExecute() {
+        // Pre-task setup
+    }
+
+    @Override
+    protected Void doInBackground(Void... params) {
+        // Sensitive API call
+        ContentResolver.query(Uri.parse("content://sms"), null, null, null, null);
+        return null;
+    }
+
+    @Override
+    protected void onPostExecute(Void result) {
+        // Post-task actions
+    }
+}
+```
+در این مثال، اپلیکیشن اندرویدی از `AsyncTask` استفاده می‌کند تا یک فعالیت حساس (خواندن `content://sms`) را به صورت غیرهمزمان در background انجام دهد. 
+بررسی می‌کنیم اگر بدون replacement آنالیز صورت بگیرد چه می‌شود!
+- شاید call graph نتواند `doInBackground` را به عنوان یک گره حساس تشخیص دهد.
+- عملا API call های حساس را از دست بدهیم. زیرا به دلیل وراثت دچار عمق شده‌اند!
+اگر این نگاشت لحاظ گردد خواهیم داشت:
+```plaintext
+node0 [label="MyAsyncTask->doInBackground"]
+edge [source=0 target=ContentResolver.query]
+```
+
