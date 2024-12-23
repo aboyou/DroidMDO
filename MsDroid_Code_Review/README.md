@@ -417,3 +417,4 @@ node0 [label="MyAsyncTask->doInBackground"]
 edge [source=0 target=ContentResolver.query]
 ```
 
+#### **برگردیم به تابع init** 
