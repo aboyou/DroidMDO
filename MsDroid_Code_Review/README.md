@@ -575,5 +575,5 @@ CGpath = apk_filename.replace(self.APKPath, self.CGPath)[:-4]
 پس از آن برای ذخیره opcodeها اقدام می‌شود که متغیرهای مربوط به آن (خروجی‌شان) به صورت زیر هستند:
 ```bash
 Opcode Filename:  /home/user/MsDroid2/MsDroid-main/src/Output/Test_DB/result/opcode/1aa440d4f99f709345b44484edd0d31aad29f5c5e00201be6d222fc16a896720.csv
-opcodePAth:  /home/user/MsDroid2/MsDroid-main/src/Output/Test_DB/result/opcode
+opcodePath:  /home/user/MsDroid2/MsDroid-main/src/Output/Test_DB/result/opcode
 ```
