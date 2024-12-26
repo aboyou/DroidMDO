@@ -578,4 +578,8 @@ Opcode Filename:  /home/user/MsDroid2/MsDroid-main/src/Output/Test_DB/result/opc
 opcodePath:  /home/user/MsDroid2/MsDroid-main/src/Output/Test_DB/result/opcode
 ```
 
-و اوکی...
+و بعد از آن فایل permissionها:
+```bash
+PermissionFileName:  /home/user/MsDroid2/MsDroid-main/src/Output/Test_DB/result/permission/1aa440d4f99f709345b44484edd0d31aad29f5c5e00201be6d222fc16a896720.csv
+permissionPath:  /home/user/MsDroid2/MsDroid-main/src/Output/Test_DB/result/permission
+```
