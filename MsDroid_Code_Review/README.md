@@ -597,6 +597,6 @@ if not os.path.exists(CGfilename):
 ```
 خروجی این قسمت، `G` عبارت است از:
 ```bash
-MultiDiGraph with 7959 nodes and 24686 edges
+>>> MultiDiGraph with 7959 nodes and 24686 edges
 ```
 در واقع 
