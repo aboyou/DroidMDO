@@ -577,3 +577,5 @@ CGpath = apk_filename.replace(self.APKPath, self.CGPath)[:-4]
 Opcode Filename:  /home/user/MsDroid2/MsDroid-main/src/Output/Test_DB/result/opcode/1aa440d4f99f709345b44484edd0d31aad29f5c5e00201be6d222fc16a896720.csv
 opcodePath:  /home/user/MsDroid2/MsDroid-main/src/Output/Test_DB/result/opcode
 ```
+
+و اوکی...
