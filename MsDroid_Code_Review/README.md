@@ -583,3 +583,20 @@ opcodePath:  /home/user/MsDroid2/MsDroid-main/src/Output/Test_DB/result/opcode
 PermissionFileName:  /home/user/MsDroid2/MsDroid-main/src/Output/Test_DB/result/permission/1aa440d4f99f709345b44484edd0d31aad29f5c5e00201be6d222fc16a896720.csv
 permissionPath:  /home/user/MsDroid2/MsDroid-main/src/Output/Test_DB/result/permission
 ```
+
+در ادامه برای TPLها هم داریم:
+```bash
+tplFileName:  /home/user/MsDroid2/MsDroid-main/src/Output/Test_DB/result/tpl/1aa440d4f99f709345b44484edd0d31aad29f5c5e00201be6d222fc16a896720.csv
+tplPath:  /home/user/MsDroid2/MsDroid-main/src/Output/Test_DB/result/tpl
+```
+
+پس از ایجاد آدرس‌های مدنظر یا چک کردن آن‌ها به جهت اطمینان از وجود آن‌ها، به استخراج call graphها پرداخته می‌شود:
+```python
+if not os.path.exists(CGfilename):
+	G = analysisobj.get_call_graph()  # call graph
+```
+خروجی این قسمت، `G` عبارت است از:
+```bash
+MultiDiGraph with 7959 nodes and 24686 edges
+```
+در واقع 
