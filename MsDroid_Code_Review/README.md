@@ -1009,7 +1009,7 @@ Finish Analysis
 └── Log Results
 ```
 
-روند اجرای فرایند کلاس `Permission` نیز به صورت زیر است:
+روند اجرای فرایند کلاس `Permission` و پس از آن به صورت زیر است:
 ```plaintext
 AndroGen.analysis_app()
 │
