@@ -706,4 +706,4 @@ for method in classes.get_methods():
                     except Exception:
                         print("apk: %s, method: %s not exists"%(log.filename, str(m.full_name)))
 ```
-این حلقه 
+این حلقه methodهای یک کلاس را بررسی می‌کند. در ابتدا بررسی می‌شود که آیا یک متد external است یا نه؟ یک متد external، در بحث permission ها اهمیت دارد وگرنه چون از کتابخانه‌های استاندارد و ... استفاده  می‌شود، نمی‌توان ویژگی‌های دیگر مانند opcodeها و ... را بررسی کرد.
