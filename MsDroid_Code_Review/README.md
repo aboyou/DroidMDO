@@ -707,3 +707,15 @@ for method in classes.get_methods():
 			print("apk: %s, method: %s not exists"%(log.filename, str(m.full_name)))
 ```
 این حلقه methodهای یک کلاس را بررسی می‌کند. در ابتدا بررسی می‌شود که آیا یک متد external است یا نه؟ یک متد external، در بحث permission ها اهمیت دارد وگرنه چون از کتابخانه‌های استاندارد و ... استفاده  می‌شود، نمی‌توان ویژگی‌های دیگر مانند opcodeها و ... را بررسی کرد.
+در این کد، نگاشتی بین یک کلاس و متدهای آن (توابع آن) نوشته می‌شود که در `class_function` ذخیره می‌گردد. نمونه‌ای از این مقدار برابر است با:
+```bash
+defaultdict(<class 'list'>, {'Landroid/support/v4/accessibilityservice/AccessibilityServiceInfoCompat$AccessibilityServiceInfoVersionImpl;': ['Landroid/support/v4/accessibilityservice/AccessibilityServiceInfoCompat$AccessibilityServiceInfoVersionImpl; getCanRetrieveWindowContent (Landroid/accessibilityservice/AccessibilityServiceInfo;)Z', 'Landroid/support/v4/accessibilityservice/AccessibilityServiceInfoCompat$AccessibilityServiceInfoVersionImpl; getDescription (Landroid/accessibilityservice/AccessibilityServiceInfo;)Ljava/lang/String;', 'Landroid/support/v4/accessibilityservice/AccessibilityServiceInfoCompat$AccessibilityServiceInfoVersionImpl; getId (Landroid/accessibilityservice/AccessibilityServiceInfo;)Ljava/lang/String;', 'Landroid/support/v4/accessibilityservice/AccessibilityServiceInfoCompat$AccessibilityServiceInfoVersionImpl; getResolveInfo (Landroid/accessibilityservice/AccessibilityServiceInfo;)Landroid/content/pm/ResolveInfo;', 'Landroid/support/v4/accessibilityservice/AccessibilityServiceInfoCompat$AccessibilityServiceInfoVersionImpl; getSettingsActivityName (Landroid/accessibilityservice/AccessibilityServiceInfo;)Ljava/lang/String;']}
+```
+در این مثال داریم که کلاس `Landroid/support/v4/accessibilityservice/AccessibilityServiceInfoCompat$AccessibilityServiceInfoVersionImpl;` دارای یک متد به نام `Landroid/support/v4/accessibilityservice/AccessibilityServiceInfoCompat$AccessibilityServiceInfoVersionImpl; getId (Landroid/accessibilityservice/AccessibilityServiceInfo;)Ljava/lang/String;` است.
+
+در ادامه یک ماتریس تشکیل می‌گردد که برای هر method تعداد هر کدام از instruction های یک method ذخیره می‌گردد.
+```plaintext
+Method's instruction vector:
+defaultdict(<class 'int'>, {'invoke-direct': 1, 'invoke-virtual': 2, 'move-result-object': 1, 'iput-object': 1, 'if-eqz': 2, 'iget-object': 2, 'return-void': 1})
+```
+
