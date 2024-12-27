@@ -718,7 +718,7 @@ defaultdict(<class 'list'>, {'Landroid/support/v4/accessibilityservice/Accessibi
 Method's instruction vector:
 defaultdict(<class 'int'>, {'invoke-direct': 1, 'invoke-virtual': 2, 'move-result-object': 1, 'iput-object': 1, 'if-eqz': 2, 'iget-object': 2, 'return-void': 1})
 ```
-در انتها opcodeها در یک فایل نوشته می‌شود:
+در انتها opcodeها در یک فایل نوشته می‌شود. برای مثال:
 
 | method_node_id | move | invoke-virtual | return-void | const/4 | const-string |
 | -------------- | ---- | -------------- | ----------- | ------- | ------------ |
