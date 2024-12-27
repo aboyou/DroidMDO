@@ -679,3 +679,5 @@ implement_dic['Lcom/example/MyClass;'] = 'Landroid/os/AsyncTask;'
 ```bash
 implement_dic['Lcom/example/MyClass;'] = 'Ljava/lang/Runnable;'
 ```
+
+از این دو نگاشت برای بهینه‌سازی گراف فراخوانی، بدست آوردن permissionها و ... استفاده می‌گردد که بعدا به آن‌ها در جای خود پرداخته خواهد شد.
