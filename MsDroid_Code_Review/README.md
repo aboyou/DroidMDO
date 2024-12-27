@@ -985,3 +985,74 @@ class Permission():
     def getClass2init(self):
         return self.class2runinit
 ```
+عملا روند اجرای فرایند کلی به صورت زیر است:
+```plaintext
+cpermission.generate()
+├── Create Permission CSV
+├── Analyze Sensitive APIs
+├── Analyze Content Providers
+└── Update Sensitive API Map
+       │
+       ↓
+Tpl.generate()
+├── Analyze Template Usage
+└── Generate Template CSV
+       │
+       ↓
+Feature Extraction
+├── Combine Permissions, Opcodes, Templates
+└── Save Features for Analysis
+       │
+       ↓
+Finish Analysis
+├── Save Call Graph
+└── Log Results
+```
+
+روند اجرای فرایند کلاس `Permission` نیز به صورت زیر است:
+```plaintext
+AndroGen.analysis_app()
+│
+├── Initialize Permission Analysis:
+│   ├── cpermission = Permission(...)
+│   └── cpermission.generate()  <-- Start Permission Analysis
+│
+├── Permission.generate()
+│   ├── Create CSV for permissions.
+│   ├── Identify sensitive APIs.
+│   ├── Map permissions to call graph nodes.
+│   ├── Substitute sensitive APIs in subclasses or interfaces.
+│   ├── Analyze Content Provider permissions.
+│   └── Write results to CSV and update sensitive API map.
+│
+├── Permission.getClass2init()
+│   └── Maps classes to their initializers or entry points (e.g., `run()` for `Runnable`).
+│
+├── Permission.getsensitive_api()
+│   └── Retrieves a dictionary mapping call graph nodes to sensitive APIs.
+│
+│   ↓ Results passed to next stage
+│
+├── Template Analysis (`Tpl.generate()`)
+│   ├── Initialize Template Analysis:
+│   │   ├── Sensitive API map from `cpermission.getsensitive_api()`
+│   │   ├── Class-to-initializer map from `cpermission.getClass2init()`
+│   │   ├── Analyze sensitive template usage (e.g., overridden methods like `doInBackground`).
+│   │   └── Generate CSV for template analysis.
+│
+│   ↓ Results passed to next stage
+│
+├── Feature Extraction
+│   ├── Combine:
+│   │   ├── Permissions (from `cpermission.generate()` output).
+│   │   ├── Opcode counts.
+│   │   ├── Sensitive APIs and call graph mappings.
+│   │   └── Templates.
+│   └── Save combined feature data for further use (e.g., CSVs or machine learning).
+│
+│   ↓
+│
+└── Finish Analysis
+    ├── Log completion or errors.
+    └── Prepare outputs (e.g., call graph, feature CSVs).
+```
