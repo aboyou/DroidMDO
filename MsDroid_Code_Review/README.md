@@ -634,4 +634,13 @@ method2nodeMap = self.getMethod2NodeMap(G)
 ```bash
 Landroid/support/v4/content/ContextCompat;
 ```
+بررسی superclass هر class یکی از کارهای مهم در این حلقه است. کد این قسمت عبارت است از:
+```python
+if classes.extends != "Ljava/lang/Object;":
+	super_dic[class_name] = str(classes.extends)
+	if str(classes.extends) in self.replacemap:
+		implement_dic[class_name] = str(classes.extends)
+```
+در واقع چک می‌شود که آیا این class از کلاس `Ljava/lang/object;` ارث‌بری کرده است یا نه!
+> دلیل این موضوع به ساختار زبان جاوا و بالتبع اندروید بستگی دارد. کلاس `Ljava/lang/object` یک کلاس root برای تمامی کلاس‌ها کحسوب مب‌شود. به همین دلیل وقتی کلاس ما از کلاس غیر از کلاس root ارث‌بری نکرده باشد، superclass آن همین `Ljava/lang/object` خواهد بود.
 
