@@ -599,4 +599,8 @@ if not os.path.exists(CGfilename):
 ```bash
 >>> MultiDiGraph with 7959 nodes and 24686 edges
 ```
-در واقع 
+در ادامه بررسی م‌کند که آیا فایل `tplFileName` موجود است یا نه! در صورتی که موجود باشد، خارج می‌گردد.
+اما قسمت بعدی کد عبارت است از:
+```python
+opcodeFile = utils.create_csv(self.smali_opcode, opcodeFilename)
+```
