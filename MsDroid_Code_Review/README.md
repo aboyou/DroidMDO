@@ -642,5 +642,5 @@ if classes.extends != "Ljava/lang/Object;":
 		implement_dic[class_name] = str(classes.extends)
 ```
 در واقع چک می‌شود که آیا این class از کلاس `Ljava/lang/object;` ارث‌بری کرده است یا نه!
-> دلیل این موضوع به ساختار زبان جاوا و بالتبع اندروید بستگی دارد. کلاس `Ljava/lang/object` یک کلاس root برای تمامی کلاس‌ها کحسوب مب‌شود. به همین دلیل وقتی کلاس ما از کلاس غیر از کلاس root ارث‌بری نکرده باشد، superclass آن همین `Ljava/lang/object` خواهد بود.
+> دلیل این موضوع به ساختار زبان جاوا و بالتبع اندروید بستگی دارد. کلاس `Ljava/lang/object` یک کلاس root برای تمامی کلاس‌ها محسوب مب‌شود. به همین دلیل وقتی کلاس ما از کلاس غیر از کلاس root ارث‌بری نکرده باشد، superclass آن همین `Ljava/lang/object` خواهد بود.
 
