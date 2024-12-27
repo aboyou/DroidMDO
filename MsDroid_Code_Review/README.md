@@ -645,5 +645,37 @@ if classes.extends != "Ljava/lang/Object;":
 > دلیل این موضوع به ساختار زبان جاوا و بالتبع اندروید بستگی دارد. کلاس `Ljava/lang/object` یک کلاس root برای تمامی کلاس‌ها محسوب مب‌شود. به همین دلیل وقتی کلاس ما از کلاس غیر از کلاس root ارث‌بری نکرده باشد، superclass آن همین `Ljava/lang/object` خواهد بود.
 > حال می‌توان در پردازش‌ها کلاس `Ljava/lang/object` را نیز به عنوان superclass آورد اما بهتر است صرفا نکات با معنای بالاتر را آورد تا **نویز در پردازش** کمتر شود.
 
+در صورتی که superclass چیزی غیر از root بود، نگاشت بین کلاس و سوپرکلاس در دیکشنری `super_dic` ذخیره می‌گردد.
 
+اگر superclass این کلاس در `self.replacemap` باشد، مشخص است که کلاس از برخی از رفتارهای از پیش‌تعریف‌شده ارث می‌برد. که در بالاتر نیز به متدهای `doInBackground` و ... اشاره شده بود. علاوه بر نگاشت قبلی، `super_dic`، نگاشتی نیز برای این کلاس‌ها صورت می‌پذیرد که در `implement_dic` ذخیره می‌گردد.
+در ادامه بررسی می‌گردد که آیا کلاس interface ای از interface های مدنظر را implement کرده است یا نه:
+```python
+if classes.implements:
+	for imp in classes.implements:
+		if str(imp) in self.replacemap:
+			implement_dic[class_name] = str(imp)
+```
+در واقع هر چک می‌گردد که آیا از متدهایی مانند `Runnable` که در بالاتر گفته شده بود، implement صورت پذیرفته است یا نه! فرقی که بین ارث‌بری و implement هست را در زیر معین می‌کنیم:
+```java
+public class MyClass extends AsyncTask implements Runnable {
+    @Override
+    protected void doInBackground(Void... params) {
+        // Async task logic
+    }
 
+    @Override 
+    // run() in Runnable
+    public void run() {
+        // Thread logic
+    }
+}
+```
+پس از پردازش این بلاک از کد در ابتدا خواهیم داشت:
+```bash
+super_dic['Lcom/example/MyClass;'] = 'Landroid/os/AsyncTask;'
+implement_dic['Lcom/example/MyClass;'] = 'Landroid/os/AsyncTask;'
+```
+و سپس بعد از شرط دوم:
+```bash
+implement_dic['Lcom/example/MyClass;'] = 'Ljava/lang/Runnable;'
+```
