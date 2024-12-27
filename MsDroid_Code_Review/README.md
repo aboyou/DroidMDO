@@ -685,25 +685,25 @@ implement_dic['Lcom/example/MyClass;'] = 'Ljava/lang/Runnable;'
 در ادامه به بررسی methodها پرداخته می‌شود:
 ```python
 for method in classes.get_methods():
-                if method.is_external():
-                    continue
-                m = method.get_method()
-                class_functions[class_name].append(str(m.full_name))
-                c = defaultdict(int)
-                flag = False
-                for ins in m.get_instructions():  # count
-                    flag = True  # exist instructions
-                    c[ins.get_name()] += 1
-                opcode = {}
-                for p in self.smali_opcode:
-                    opcode[p] = 0
-                for op in c:
-                    if op in self.smali_opcode:
-                        opcode[op] += c[op]
-                if flag:
-                    try:
-                        utils.write_csv(opcode, opcodeFile, method2nodeMap[str(m.full_name)][0])
-                    except Exception:
-                        print("apk: %s, method: %s not exists"%(log.filename, str(m.full_name)))
+	if method.is_external():
+		continue
+	m = method.get_method()
+	class_functions[class_name].append(str(m.full_name))
+	c = defaultdict(int)
+	flag = False
+	for ins in m.get_instructions():  # count
+		flag = True  # exist instructions
+		c[ins.get_name()] += 1
+	opcode = {}
+	for p in self.smali_opcode:
+		opcode[p] = 0
+	for op in c:
+		if op in self.smali_opcode:
+			opcode[op] += c[op]
+	if flag:
+		try:
+			utils.write_csv(opcode, opcodeFile, method2nodeMap[str(m.full_name)][0])
+		except Exception:
+			print("apk: %s, method: %s not exists"%(log.filename, str(m.full_name)))
 ```
 این حلقه methodهای یک کلاس را بررسی می‌کند. در ابتدا بررسی می‌شود که آیا یک متد external است یا نه؟ یک متد external، در بحث permission ها اهمیت دارد وگرنه چون از کتابخانه‌های استاندارد و ... استفاده  می‌شود، نمی‌توان ویژگی‌های دیگر مانند opcodeها و ... را بررسی کرد.
