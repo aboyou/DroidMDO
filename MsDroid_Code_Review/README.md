@@ -604,7 +604,7 @@ if not os.path.exists(CGfilename):
 ```python
 opcodeFile = utils.create_csv(self.smali_opcode, opcodeFilename)
 ```
-با استفاده از خط کد بالا یک فایل `.csv` با نامی که درون متغیر `opcodeFileName` ذخیره شده است، ایجاد می‌شود. هِدِرهای این فایل csv، اعضای لیست `self.smali_opcode` هستند. برای مثال اگر لیست `self.smali_opcode` برابر مقدار زیر باشد:
+با استفاده از خط کد بالا یک فایل `.csv` با نامی که درون متغیر `opcodeFileName` ذخیره شده است، ایجاد می‌شود. هِدِرهای این فایل csv، اعضای لیست `self.smali_opcode` هستند. برای مثال اگر لیست `self.smali_opcode` برابر زیر باشد:
 ```bash
 ['nop', 'move', 'return-void', 'invoke-virtual']
 ```
