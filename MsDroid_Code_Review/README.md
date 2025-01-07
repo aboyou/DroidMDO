@@ -1056,3 +1056,9 @@ AndroGen.analysis_app()
     ├── Log completion or errors.
     └── Prepare outputs (e.g., call graph, feature CSVs).
 ```
+
+
+در ابتدای بررسی فایل `permission.py` چهار رشته به صورت زیر تعریف می‌گردند:
+```
+
+```
