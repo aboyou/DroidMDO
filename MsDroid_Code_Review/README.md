@@ -1059,6 +1059,128 @@ AndroGen.analysis_app()
 
 
 در ابتدای بررسی فایل `permission.py` چهار رشته به صورت زیر تعریف می‌گردند:
+```python
+# Permission includes the api and contentprovider parts
+# Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder)
+query_method = "Landroid/content/ContentResolver;->query(Landroid/net/Uri; [Ljava/lang/String; Ljava/lang/String; [Ljava/lang/String; Ljava/lang/String;)Landroid/database/Cursor;"
+# Uri insert(Uri uri, ContentValues values)
+insert_method = "Landroid/content/ContentResolver;->insert(Landroid/net/Uri; Landroid/content/ContentValues;)Landroid/net/Uri;"
+# int delete(Uri uri, String selection, String[] selectionArgs)
+delete_method = "Landroid/content/ContentResolver;->delete(Landroid/net/Uri; Ljava/lang/String; [Ljava/lang/String;)I"
+# int update(Uri uri, ContentValues values, String selection, String[] selectionArgs)
+update_method = "Landroid/content/ContentResolver;->update(Landroid/net/Uri; Landroid/content/ContentValues; Ljava/lang/String; [Ljava/lang/String;)I"
+method_dic = {query_method: ['R'], insert_method: ['W'], delete_method: ['W'], update_method: ['W', 'R']}
 ```
 
+در این خطوط از کد، ContentResolver API ها مورد بررسی قرار می‌گیرند و نوع دسترسی مدنظر هر کدام هم تعریف می‌گردد که در اینجا 'W' یا 'R' عنوان شده است. 4 API مختلف در اینجا وجود دارد که به هر کدام نوع دسترسی مدنظر را اطلاق کردیم. 
+این کلاس از این قسمت به بعد شروع خواهد شد و تابع __init__ تعریف می‌گردد:
+```python
+class Permission():
+    def __init__(self, G, path, class_functions, super_dic, implement_dic, dexobj, permission, cppermission, method2nodeMap):
+        self.G = G  # call graph
+        self.path = path  # csv path to save
+        self.class_functions = class_functions
+        self.super_dic = super_dic
+        self.implement_dic = implement_dic
+        self.dexobj = dexobj
+        self.sensitiveapimap = {}  # All sensitive nodes in this apk and the permissions they involve
+        self.class2runinit = defaultdict(dict)
+        self.replacemap = {'Landroid/os/AsyncTask;': ['onPreExecute', 'doInBackground'],
+                           'Landroid/os/Handler;': ['handleMessage'], 'Ljava/lang/Runnable;': ['run']}
+        self.permission = permission
+        self.cp_permission = cppermission
+        self.method2nodeMap = method2nodeMap
 ```
+
+در کد بالا، یکی از موجودیت‌هایی که فلسفه نویی دارد، class2runinit است. این موجودیت یک نگاشت بین کلاس‌ها و نقاط ورودی (entry points) آن‌هاست. 
+
+در کلاس `Permission` تابع اصلی، تابع `generate()` است. به همین دلیل در ابتدا از این تابع شروع می‌کنیم:
+```python
+    def generate(self):
+        per_map = get_from_csv_gml(_settings.api_file)
+        result_f = create_csv(self.permission, self.path)
+        self.node_attr = df_from_G(self.G)
+        if type(self.node_attr) == bool and not self.node_attr:
+            result_f.close()
+            return 2
+        getresolver = ";->getContentResolver()Landroid/content/ContentResolver;"
+        functions = self.node_attr.label
+        ids = self.node_attr.id
+  
+        substitude_permission = self.substitude()  # Subclasses involving sensitive APIs
+        # Get contentprovider related permissions
+        node_cp_permission = defaultdict(list)
+        java_class = {}  # need to generate java file
+        for i in range(len(ids)):
+            function = functions.get(i)
+            # debug(function)
+            if function.find(getresolver) >= 0:
+                node_id = ids.get(i)
+                nodes = n_neighbor(node_id, self.G)
+                debug(function, nodes)
+                for node in nodes:
+                    node_permission = self.deal_node(node)
+                    if node_permission:
+                        label = get_label(node, self.G)
+                        left = label.find(' ')
+                        right = label.find('->')
+                        function_class = label[left + 1: right]
+                        debug(function_class, node_permission)
+                        java_class.update({function_class: node_permission})
+        debug("java_class", java_class)
+        for method in self.dexobj.get_methods():
+            if str(method.get_class_name()) in java_class:
+                current_class = self.dexobj.get_class(method.get_class_name())
+                content = str(current_class.get_source())
+                try:
+                    node_permission = java_class.pop(method.get_class_name())
+                except Exception:
+                    _settings.logger.error("%s has error method name %s"%(self.path, method.get_class_name()))
+                    continue
+                if content.find('content://') >= 0:
+                    for per in self.cp_permission.keys():
+                        if content.find(per) >= 0:
+                            pers = self.cp_permission[per]
+                            for p in pers:
+                                if p[0] in node_permission:
+                                    for n_id in node_permission[p[0]]:
+                                        node_cp_permission[n_id].append(p[1])
+        debug("node_cp_permission", node_cp_permission)
+        i = 0
+        while i < len(ids):
+            s = functions.get(i)
+            s = node2function(s)
+            p = self.count_permission(s, per_map)
+            node_id = ids.get(i)
+            if node_id in node_cp_permission:  # Permissions related to content providers
+                for per in self.permission:
+                    p[per] = 0
+                for per in node_cp_permission[node_id]:
+                    p[per] = 1
+            if node_id in substitude_permission:  # Subclasses are sensitive APIs
+                for per in self.permission:
+                    p[per] = 0
+                for per in substitude_permission[node_id]:
+                    p[per] = 1
+            if p != {}:
+                write_csv(p, result_f, node_id)
+                node_permission = []
+                for k in p:
+                    if p[k] == 1:
+                        node_permission.append(k)
+                self.sensitiveapimap.update({node_id: node_permission})
+            i += 1
+        result_f.close()
+        return 0
+```
+
+این تابع وظیفۀ اصلی تطابق گره‌های گراف با مجوزهای درخواستی را دارد.
+در ابتدای کد داریم که:
+```python
+per_map = get_from_csv_gml(_settings.api_file)
+```
+در واقع این قسمت از کد در حال اتخاذ یک نگاشت بین APIهای حساس و مجوزهای مورد نیاز آن‌هاست. قسمتی از خروجی این قسمت عبارت است از:
+```bash
+ {...'Lcom/android/internal/telephony/cdma/CdmaSMSDispatcher;->sendSubmitPdu(Lcom/android/internal/telephony/cdma/SmsMessage$SubmitPdu; Landroid/app/PendingIntent; Landroid/app/PendingIntent; Ljava/lang/String;)V': ['Permission:android.permission.WAKE_LOCK'], 'Landroid/media/AudioService$4;->onReceive(Landroid/content/Context; Landroid/content/Intent;)V': ['Permission:android.permission.WAKE_LOCK'], 'Landroid/media/AudioService;->onSendFinished(Landroid/app/PendingIntent; Landroid/content/Intent; I Ljava/lang/String; Landroid/os/Bundle;)V': ['Permission:android.permission.WAKE_LOCK'], 'Landroid/net/wifi/WifiStateMachine$DefaultState;->processMessage(Landroid/os/Message;)Z': ['Permission:android.permission.WAKE_LOCK'], 'Lcom/android/mms/transaction/NotificationPlayer;->releaseWakeLock()V': ['Permission:android.permission.WAKE_LOCK'], 'Lcom/android/phone/CallerInfoCache$CacheAsyncTask;->releaseWakeLock()V': ['Permission:android.permission.WAKE_LOCK'], 'Lcom/android/systemui/media/NotificationPlayer;->releaseWakeLock()V': ['Permission:android.permission.WAKE_LOCK'], 'Lcom/android/contacts/voicemail/VoicemailPlaybackPresenter;->access$2200(Lcom/android/contacts/voicemail/VoicemailPlaybackPresenter; I I)V': ['Permission:android.permission.WAKE_LOCK'], 'Lcom/android/internal/policy/impl/KeyguardViewMediator;->access$1100(Lcom/android/internal/policy/impl/KeyguardViewMediator; I)V': ['Permission:android.permission.WAKE_LOCK'], 'Lcom/android/mms/transaction/NotificationPlayer;->access$700(Lcom/android/mms/transaction/NotificationPlayer;)V': ['Permission:android.permission.WAKE_LOCK'], 'Lcom/android/phone/BluetoothHandsfree;->access$3600(Lcom/android/phone/BluetoothHandsfree;)V': ['Permission:android.permission.WAKE_LOCK'], 'Lcom/android/phone/CallerInfoCache$CacheAsyncTask;->onCancelled(Ljava/lang/Void;)V': ['Permission:android.permission.WAKE_LOCK'], 'Lcom/android/phone/CallerInfoCache$CacheAsyncTask;->onPostExecute(Ljava/lang/Void;)V': ['Permission:android.permission.WAKE_LOCK'], 'Lcom/android/server/am/ActivityManagerService;->comeOutOfSleepIfNeededLocked()V': ['Permission:android.permission.WAKE_LOCK'], 'Lcom/android/systemui/media/NotificationPlayer;->access$700(Lcom/android/systemui/media/NotificationPlayer;)V': ['Permission:android.permission.WAKE_LOCK'], 'Lcom/android/phone/CallerInfoCache$CacheAsyncTask;->onCancelled(Ljava/lang/Object;)V': ['Permission:android.permission.WAKE_LOCK'], 'Lcom/android/phone/CallerInfoCache$CacheAsyncTask;->onPostExecute(Ljava/lang/Object;)V': ['Permission:android.permission.WAKE_LOCK'], 'Lcom/android/server/sip/SipService;->updateWakeLocks()V': ['Permission:android.permission.WAKE_LOCK'], 'Landroid/app/ActivityManagerNative;->setLockScreenShown(Z)V': ['Permission:android.permission.WAKE_LOCK'], 'Landroid/app/IActivityManager;->setLockScreenShown(Z)V': ['Permission:android.permission.WAKE_LOCK'], 'Lcom/android/exchange/ExchangeService$AccountObserver;->access$700(Lcom/android/exchange/ExchangeService$AccountObserver;)V': ['Permission:android.permission.WAKE_LOCK'], 'Lcom/android/internal/policy/impl/KeyguardViewMediator;->updateActivityLockScreenState()V': ['Permission:android.permission.WAKE_LOCK'], 'Lcom/android/server/sip/SipService;->access$1300(Lcom/android/server/sip/SipService; Landroid/net/sip/SipProfile; I)V': ['Permission:android.permission.WAKE_LOCK'], 'Lcom/android/server/sip/SipService;->notifyProfileRemoved(Landroid/net/sip/SipProfile;)V': ['Permission:android.permission.WAKE_LOCK'], 'Lcom/android/settings/accounts/ManageAccountsSettings;->requestOrCancelSyncForAccounts(Z)V': ['Permission:android.permission.READ_SYNC_SETTINGS'], 'Lcom/android/settings/accounts/ManageAccountsSettings;->onOptionsItemSelected(Landroid/view/MenuItem;)Z': ['Permission:android.permission.READ_SYNC_SETTINGS'], 'Lcom/android/settings/accounts/AccountPreferenceBase;->onOptionsItemSelected(Landroid/view/MenuItem;)Z': ['Permission:android.permission.READ_SYNC_SETTINGS'], 'Lcom/android/settings/accounts/AccountSyncSettings;->onOptionsItemSelected(Landroid/view/MenuItem;)Z': ['Permission:android.permission.READ_SYNC_SETTINGS'], 'Lcom/android/launcher2/Workspace$1;->run()V': ['Permission:android.permission.SET_WALLPAPER_HINTS'], 'Lcom/android/server/SerialService;->getSerialPorts()[Ljava/lang/String;': ['Permission:android.permission.SERIAL_PORT'], 'Landroid/hardware/ISerialManager$Stub$Proxy;->getSerialPorts()[Ljava/lang/String;': ['Permission:android.permission.SERIAL_PORT'], 'Landroid/hardware/ISerialManager$Stub;->getSerialPorts()[Ljava/lang/String;': ['Permission:android.permission.SERIAL_PORT'], 'Landroid/hardware/ISerialManager;->getSerialPorts()[Ljava/lang/String;': ['Permission:android.permission.SERIAL_PORT'], 'Landroid/hardware/ISerialManager$Stub;->onTransact(I Landroid/os/Parcel; Landroid/os/Parcel; I)Z': ['Permission:android.permission.SERIAL_PORT'], 'Landroid/hardware/SerialManager;->getSerialPorts()[Ljava/lang/String;': ['Permission:android.permission.SERIAL_PORT'], 'Lcom/android/server/SerialService;->onTransact(I Landroid/os/Parcel; Landroid/os/Parcel; I)Z': ['Permission:android.permission.SERIAL_PORT'], 'Landroid/hardware/ISerialManager$Stub$Proxy;->openSerialPort(Ljava/lang/String;)Landroid/os/ParcelFileDescriptor;': ['Permission:android.permission.SERIAL_PORT'], 'Landroid/hardware/ISerialManager$Stub;->openSerialPort(Ljava/lang/String;)Landroid/os/ParcelFileDescriptor;': ['Permission:android.permission.SERIAL_PORT'], 'Landroid/hardware/ISerialManager;->openSerialPort(Ljava/lang/String;)Landroid/os/ParcelFileDescriptor;': ['Permission:android.permission.SERIAL_PORT'], 'Landroid/hardware/SerialManager;->openSerialPort(Ljava/lang/String; I)Landroid/hardware/SerialPort;': ['Permission:android.permission.SERIAL_PORT'], 'Lcom/android/nfc/handover/HandoverManager;->createBluetoothOobDataRecord()Landroid/nfc/NdefRecord;': ['Permission:android.permission.BLUETOOTH'], 'Lcom/android/server/input/InputManagerService;->getDeviceAlias(Ljava/lang/String;)Ljava/lang/String;': ['Permission:android.permission.BLUETOOTH'], 'Lcom/android/nfc/handover/HandoverManager;->createHandoverRequestMessage()Landroid/nfc/NdefMessage;': ['Permission:android.permission.BLUETOOTH'], 'Lcom/android/nfc/handover/HandoverManager;->createHandoverSelectMessage(Z)Landroid/nfc/NdefMessage;': ['Permission:android.permission.BLUETOOTH'], 'Lcom/android/nfc/handover/ConfirmConnectActivity;->onCreate(Landroid/os/Bundle;)V': ['Permission:android.permission.BLUETOOTH'], 'Landroid/media/AudioService;->onSetA2dpConnectionState(Landroid/bluetooth/BluetoothDevice; I)V': ['Permission:android.permission.BLUETOOTH'], 'Lcom/android/settings/Settings$HeaderAdapter;-><init>(Landroid/content/Context; Ljava/util/List; Lcom/android/settings/accounts/AuthenticatorHelper;)V': ['Permission:android.permission.BLUETOOTH'], 'Landroid/media/AudioService;->access$6200(Landroid/media/AudioService; Landroid/bluetooth/BluetoothDevice; I)V': ['Permission:android.permission.BLUETOOTH'], 'Lcom/android/settings/Settings$KeyboardLayoutPickerActivity;->setListAdapter(Landroid/widget/ListAdapter;)V': ['Permission:android.permission.BLUETOOTH'], 'Lcom/android/nfc/handover/HandoverManager$HandoverPowerManager;->isBluetoothEnabled()Z': ['Permission:android.permission.BLUETOOTH'], 'Lcom/android/systemui/statusbar/policy/BluetoothController;-><init>(Landroid/content/Context;)V': ['Permission:android.permission.BLUETOOTH'], 'Lcom/android/phone/BluetoothHandsfree$1;->onServiceConnected(I Landroid/bluetooth/BluetoothProfile;)V': ['Permission:android.permission.BLUETOOTH'], 'Lcom/android/phone/BluetoothHandsfree;->access$800(Lcom/android/phone/BluetoothHandsfree; I Landroid/bluetooth/BluetoothDevice;)V': ['Permission:android.permission.BLUETOOTH'], 'Landroid/media/AudioService;->access$2200(Landroid/media/AudioService;)V': ['Permission:android.permission.BLUETOOTH'], 'Lcom/android/phone/BluetoothHandsfree;->access$4800(Lcom/android/phone/BluetoothHandsfree; Landroid/bluetooth/BluetoothDevice;)I': ['Permission:android.permission.BLUETOOTH'], 'Lcom/android/settings/bluetooth/RequestPermissionActivity;->createDialog()V': ['Permission:android.permission.BLUETOOTH'], 'Lcom/android/phone/BluetoothHandsfree$ScoSocketConnectThread;->failedScoConnect()V': ['Permission:android.permission.BLUETOOTH'], 'Lcom/android/phone/InCallTouchUi;->access$300(Lcom/android/phone/InCallTouchUi; Lcom/android/internal/telephony/CallManager;)V': ['Permission:android.permission.BLUETOOTH'], 'Lcom/android/phone/InCallTouchUi$2;->onAnimationStart(Landroid/animation/Animator;)V': ['Permission:android.permission.BLUETOOTH'], 'Lcom/android/phone/InCallScreen;->onDialerOpen(Z)V': ['Permission:android.permission.BLUETOOTH'], 'Landroid/server/BluetoothService;->notifyIncomingConnection(Ljava/lang/String; Z)Z': ['Permission:android.permission.BLUETOOTH'], 'Landroid/bluetooth/IBluetooth$Stub$Proxy;->notifyIncomingConnection(Ljava/lang/String; Z)Z': ['Permission:android.permission.BLUETOOTH'], 'Landroid/bluetooth/IBluetooth$Stub;->notifyIncomingConnection(Ljava/lang/String; Z)Z': ['Permission:android.permission.BLUETOOTH'], 'Landroid/bluetooth/IBluetooth;->notifyIncomingConnection(Ljava/lang/String; Z)Z': ['Permission:android.permission.BLUETOOTH'], 'Lcom/android/server/input/InputManagerService;->systemReady(Landroid/server/BluetoothService;)V': ['Permission:android.permission.BLUETOOTH']}
+```
+
