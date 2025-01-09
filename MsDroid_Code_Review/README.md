@@ -1185,3 +1185,25 @@ per_map = get_from_csv_gml(_settings.api_file)
 ```
 
 در خط بعدی از کد، یک csv برای ذخیرۀ permissionهای مربوط به هر گره ایجاد می‌گردد.
+```python
+result_f = create_csv(self.permission, self.path)
+```
+خط بعدی کد ویژگی‌های گره‌های گراف را استخراج و ذخیره می‌کند:
+```python
+self.node_attr = df_from_G(self.G)
+```
+آن‌ چیزی که درون `self.node_attr` ذخیره می‌گردد، عبارت است از:
+```bash
+        id                                              label  external  entrypoint  native  public  static             vm  codesize
+0        0  <analysis.MethodAnalysis Landroid/support/v4/a...         0           0       0       1       0  8767136463272         0
+1        1  <analysis.MethodAnalysis Landroid/support/v4/a...         0           0       0       1       1  8767136463272         4
+2        2  <analysis.MethodAnalysis Landroid/support/v4/a...         0           0       0       1       0  8767136463272         0
+3        3  <analysis.MethodAnalysis Landroid/support/v4/a...         0           0       0       1       1  8767136463272         4
+4        4  <analysis.MethodAnalysis Landroid/support/v4/a...         0           0       0       1       0  8767136463272         0
+...    ...                                                ...       ...         ...     ...     ...     ...            ...       ...
+7954  7954  <analysis.MethodAnalysis Lcom/widget/view/Tall...         0           0       0       1       0  8767136463272        14
+7955  7955  <analysis.MethodAnalysis Lcom/widget/view/Tall...         1           0       0       0       0              0         0
+7956  7956  <analysis.MethodAnalysis Landroid/graphics/Pai...         1           0       0       0       0              0         0
+7957  7957  <analysis.MethodAnalysis Landroid/graphics/Bit...         1           0       0       0       0              0         0
+7958  7958  <analysis.MethodAnalysis Lcom/widget/view/Tall...         1           0       0       0       0              0         0
+```
