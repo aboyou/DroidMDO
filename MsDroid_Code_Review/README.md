@@ -1207,3 +1207,7 @@ self.node_attr = df_from_G(self.G)
 7957  7957  <analysis.MethodAnalysis Landroid/graphics/Bit...         1           0       0       0       0              0         0
 7958  7958  <analysis.MethodAnalysis Lcom/widget/view/Tall...         1           0       0       0       0              0         0
 ```
+نوع این متغیر، `self.node_attr`، برابر است با:
+```python
+<class 'pandas.core.frame.DataFrame'>
+```
