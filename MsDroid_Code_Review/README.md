@@ -1260,3 +1260,38 @@ java_class = {}  # need to generate java file
     }
 }
 ```
+
+در ادامه به بررسی این قسمت از کد می‌پردازیم:
+```python
+for method in self.dexobj.get_methods():
+            if str(method.get_class_name()) in java_class:
+                current_class = self.dexobj.get_class(method.get_class_name())
+                content = str(current_class.get_source())
+                try:
+                    node_permission = java_class.pop(method.get_class_name())
+                except Exception:
+                    _settings.logger.error("%s has error method name %s"%(self.path, method.get_class_name()))
+                    continue
+                if content.find('content://') >= 0:
+                    for per in self.cp_permission.keys():
+                        if content.find(per) >= 0:
+                            pers = self.cp_permission[per]
+                            for p in pers:
+                                if p[0] in node_permission:
+                                    for n_id in node_permission[p[0]]:
+                                        node_cp_permission[n_id].append(p[1])
+```
+
+این قسمت از کد مسئول تجزیه و تحلیل متدهای کلاس جاوا در APK برای شناسایی تعاملات با ContentProviderها (به عنوان مثال، از طریق URIهایی مانند content://) و نگاشت آن‌ها با مجوزهای مورد نیاز است.
+روی متدها در APK تکرار می‌شود تا آن‌هایی را که متعلق به کلاس‌هایی هستند که با ContentProviderها تعامل دارند، شناسایی کند.
+کد منبع این کلاس‌ها را بررسی می کند تا URI های محتوا را شناسایی کند (به عنوان مثال، content://contacts).
+سپس `Maps`، می‌آید و `content URI` ها را شناسایی می‌کند و به مجوزهای مربوطه تطابق داده و آن‌ها را با گره‌های گراف فراخوانی مرتبط می‌کند.
+و بعد `node_cp_permission` را با مجوزهای شناسایی شده برای تعاملات ContentProvider به روز می‌کند.
+خروجی این بخش که `node_cp_permission` است، شکلی شبیه به زیر است:
+```bash
+node_cp_permission = {
+    10: ["Permission:READ_CONTACTS"],
+    15: ["Permission:WRITE_SMS", "Permission:READ_SMS"]
+}
+```
+
