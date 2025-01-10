@@ -1211,3 +1211,52 @@ self.node_attr = df_from_G(self.G)
 ```python
 <class 'pandas.core.frame.DataFrame'>
 ```
+ در ادامه متغیر زیر تعریف می‌گردد:
+ ```python
+ getresolver = ";->getContentResolver()Landroid/content/ContentResolver;"
+```
+دلیل تعریف این متغیر شناسایی فراخوانی‌های تابع `getContentResolver()` است. خروجی این تابع آبجکتی است که برای چهار عمل اصلی ContentProvider ها از آن‌ها استفاده می‌گردد.
+در ادامه به کد زیر می‌رسیم:
+```python
+substitude_permission = self.substitude()
+```
+متدهای overridden یا جایگزین شده را در زیرکلاس‌ها یا کلاس‌هایی که رابط‌های پیاده‌سازی می‌کنند، شناسایی می‌کند. این متدها را ردیابی می‌کند تا آن‌ها را به همتایان حساس API خود در کلاس پایه یا رابط پیوند دهد. API های حساس را در این زیرکلاس ها به مجوزهای مربوطه فراخوانی می‌کند.
+
+در ادامه خواهیم داشت:
+```python
+java_class = {}  # need to generate java file
+        for i in range(len(ids)):
+            function = functions.get(i)
+            # debug(function)
+            if function.find(getresolver) >= 0:
+                node_id = ids.get(i)
+                nodes = n_neighbor(node_id, self.G)
+                debug(function, nodes)
+                for node in nodes:
+                    node_permission = self.deal_node(node)
+                    if node_permission:
+                        label = get_label(node, self.G)
+                        left = label.find(' ')
+                        right = label.find('->')
+                        function_class = label[left + 1: right]
+                        debug(function_class, node_permission)
+                        java_class.update({function_class: node_permission})
+```
+برای این قسمت از کد، هدف این است که:
+
+ گره‌هایی را در گراف فراخوانی که `getContentResolver()` را فراخوانی می‌کنند، شناسایی کنید.
+ سپس عملیات بعدی (به عنوان مثال، پرس و جو، درج) انجام شده با استفاده از شی ContentResolver را شناسایی کنید.
+ این عملیات را به مجوزهای مورد نیاز برای دسترسی ارائه دهنده محتوا ترسیم کنید.
+ نتایج را در `java_class` ذخیره کنید، که نگاشت نام کلاس‌ها را به مجوزهای مورد نیاز آن‌ها ردیابی می‌کند.
+ خروجی این قسمت چیزی شبیه به این خواهد بود:
+ ```bash
+ java_class = {
+    "Lcom/example/MyClass;": {
+        "query": "Permission:READ_CONTACTS",
+        "insert": "Permission:WRITE_CONTACTS"
+    },
+    "Lcom/example/AnotherClass;": {
+        "query": "Permission:READ_SMS"
+    }
+}
+```
