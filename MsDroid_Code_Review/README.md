@@ -1295,3 +1295,32 @@ node_cp_permission = {
 }
 ```
 
+بعد از آن داریم:
+```python
+i = 0
+        while i < len(ids):
+            s = functions.get(i)
+            s = node2function(s)
+            p = self.count_permission(s, per_map)
+            node_id = ids.get(i)
+            if node_id in node_cp_permission:  # Permissions related to content providers
+                for per in self.permission:
+                    p[per] = 0
+                for per in node_cp_permission[node_id]:
+                    p[per] = 1
+            if node_id in substitude_permission:  # Subclasses are sensitive APIs
+                for per in self.permission:
+                    p[per] = 0
+                for per in substitude_permission[node_id]:
+                    p[per] = 1
+            if p != {}:
+                write_csv(p, result_f, node_id)
+                node_permission = []
+                for k in p:
+                    if p[k] == 1:
+                        node_permission.append(k)
+                self.sensitiveapimap.update({node_id: node_permission})
+            i += 1
+```
+
+این کد هر گره را در گراف فراخوانی (`self.G`) پردازش می‌کند تا مجوزها را به عملیات نشان‌داده‌شده توسط آن گره ترسیم کند. نتایج حاصل از تجزیه و تحلیل مجوز ContentProvider (`node_cp_permission`) و APIهای حساس جایگزین‌‎شده (`substitude_permission`) را برای ایجاد یک نقشه مجوز جامع ترکیب می‌کند.
