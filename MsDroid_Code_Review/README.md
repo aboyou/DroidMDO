@@ -1324,3 +1324,13 @@ i = 0
 ```
 
 این کد هر گره را در گراف فراخوانی (`self.G`) پردازش می‌کند تا مجوزها را به عملیات نشان‌داده‌شده توسط آن گره ترسیم کند. نتایج حاصل از تجزیه و تحلیل مجوز ContentProvider (`node_cp_permission`) و APIهای حساس جایگزین‌‎شده (`substitude_permission`) را برای ایجاد یک نقشه مجوز جامع ترکیب می‌کند.
+در قسمت ابتدایی این حلقه داریم که:
+```python
+s = functions.get(i)
+s = node2function(s)
+```
+ در ابتدا نام متد مربوط به گره i را می‌گیرد و سپس فرم استاندارد آن را خروجی می‌دهد. نتیجه این بخش می‌تواند مانند زیر باشد:
+```bash
+ Function get:  <analysis.MethodAnalysis Landroid/support/v4/app/BackStackState;-><init>(Landroid/os/Parcel;)V [access_flags=public constructor] @ 0x68274>
+Node to Function:  Landroid/support/v4/app/BackStackState;-><init>(Landroid/os/Parcel;)V
+```
