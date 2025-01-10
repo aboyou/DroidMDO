@@ -1354,3 +1354,29 @@ p = {"Permission:READ_CONTACTS": 0, "Permission:SEND_SMS": 0}
 Sensitive API Map:  {558: ['Permission:android.permission.BROADCAST_STICKY'], 999: ['Permission:android.permission.BROADCAST_STICKY'], 1495: ['Permission:android.permission.ACCESS_NETWORK_STATE'], 1496: ['Permission:android.permission.ACCESS_NETWORK_STATE'], 1499: ['Permission:android.permission.ACCESS_NETWORK_STATE'], 1500: ['Permission:android.permission.ACCESS_NETWORK_STATE'], 1503: ['Permission:android.permission.ACCESS_NETWORK_STATE'], 1504: ['Permission:android.permission.ACCESS_NETWORK_STATE'], 1506: ['Permission:android.permission.ACCESS_NETWORK_STATE'], 1507: ['Permission:android.permission.ACCESS_NETWORK_STATE'], 1509: ['Permission:android.permission.ACCESS_NETWORK_STATE'], 1510: ['Permission:android.permission.ACCESS_NETWORK_STATE'], 1513: ['Permission:android.permission.ACCESS_NETWORK_STATE'], 1517: ['Permission:android.permission.ACCESS_NETWORK_STATE'], 2988: ['Permission:android.permission.READ_CONTACTS', 'Permission:android.permission.READ_SOCIAL_STREAM', 'Permission:android.permission.READ_USER_DICTIONARY', 'Permission:android.permission.VIBRATE', 'Permission:android.permission.WRITE_CONTACTS'], 2989: ['Permission:android.permission.READ_CONTACTS', 'Permission:android.permission.READ_SOCIAL_STREAM', 'Permission:android.permission.READ_USER_DICTIONARY', 'Permission:android.permission.VIBRATE', 'Permission:android.permission.WRITE_CONTACTS'], 2994: ['Permission:android.permission.READ_CONTACTS', 'Permission:android.permission.READ_SOCIAL_STREAM', 'Permission:android.permission.READ_USER_DICTIONARY', 'Permission:android.permission.VIBRATE', 'Permission:android.permission.WRITE_CONTACTS'], 2995: ['Permission:android.permission.READ_CONTACTS', 'Permission:android.permission.READ_SOCIAL_STREAM', 'Permission:android.permission.READ_USER_DICTIONARY', 'Permission:android.permission.VIBRATE', 'Permission:android.permission.WRITE_CONTACTS'], 3704: ['Permission:android.permission.ACCESS_NETWORK_STATE', 'Permission:android.permission.RECEIVE_BOOT_COMPLETED'], 3757: ['Permission:android.permission.ACCESS_NETWORK_STATE', 'Permission:android.permission.RECEIVE_BOOT_COMPLETED'], 3772: ['Permission:android.permission.ACCESS_NETWORK_STATE', 'Permission:android.permission.RECEIVE_BOOT_COMPLETED'], 3775: ['Permission:android.permission.INTERNET', 'Permission:android.permission.RECEIVE_BOOT_COMPLETED'], 3777: ['Permission:android.permission.ACCESS_NETWORK_STATE', 'Permission:android.permission.RECEIVE_BOOT_COMPLETED'], 3780: ['Permission:android.permission.ACCESS_NETWORK_STATE', 'Permission:android.permission.RECEIVE_BOOT_COMPLETED'], 3824: ['Permission:android.permission.READ_PHONE_STATE'], 3825: ['Permission:android.permission.ACCESS_COARSE_LOCATION', 'Permission:android.permission.ACCESS_FINE_LOCATION'], 3875: ['Permission:android.permission.INTERNET'], 3882: ['Permission:android.permission.INTERNET'], 3935: ['Permission:android.permission.VIBRATE'], 3945: ['Permission:android.permission.READ_PHONE_STATE'], 3947: ['Permission:android.permission.ACCESS_WIFI_STATE'], 5343: ['Permission:android.permission.READ_PHONE_STATE'], 5345: ['Permission:android.permission.READ_PHONE_STATE'], 5350: ['Permission:android.permission.GET_TASKS'], 5624: ['Permission:android.permission.BROADCAST_STICKY'], 5626: ['Permission:android.permission.BROADCAST_STICKY'], 5849: ['Permission:android.permission.INTERNET'], 6708: ['Permission:android.permission.INTERNET'], 6709: ['Permission:android.permission.INTERNET']}
 ```
 
+## بازگشتی به کلاس `AndroGen`
+در کلاس `AndroGen`، برای استفاده از کلاس `Permission` داریم:
+```python
+cpermission = Permission(G=G, path=permissionFilename, class_functions=class_functions, super_dic=super_dic,implement_dic=implement_dic, dexobj=dexobj, permission=self.permission, cppermission=self.cppermission, method2nodeMap=method2nodeMap)
+cpermission.generate()
+class2init = cpermission.getClass2init()
+sensitiveapimap = cpermission.getsensitive_api()
+```
+کارکرد تابع `getClass2init`، بازیابی نگاشت کلاس‌ها به متدهای اولیه یا نقطه ورودی (به عنوان مثال، constructureها یا متدهای کلیدی مانند run() در Runnable) است. 
+خروجی getClass2init()
+متد یک دیکشنری با ساختار زیر برمی گرداند:
+ کلید: نام کلاس (به عنوان مثال، Lcom/example/MyClass؛)
+ مقدار مقابل کلید: نگاشت دیکشنری دیگر:
+ شناسه گره: شناسه گره گراف فراخوانی که متد را نشان می‌دهد.
+ نام روش: نام متد اولیه یا نقطه ورود.
+```bash
+{
+    "Lcom/example/MyClass;": {
+        12: "Lcom/example/MyClass;-><init>()V",  # Constructor
+        15: "Lcom/example/MyClass;->run()V"      # Runnable entry point
+    },
+    "Lcom/example/MyOtherClass;": {
+        20: "Lcom/example/MyOtherClass;->doWork()V"
+    }
+} 
+```
