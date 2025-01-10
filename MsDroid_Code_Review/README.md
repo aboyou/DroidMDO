@@ -1591,3 +1591,43 @@ node_id,READ_CONTACTS,SEND_SMS
 ### **نتیجه‌گیری**
 
 کلاس **`Tpl`** نقش مهمی در ارتباط الگوهای اندروید با استفاده از APIهای حساس ایفا می‌کند. این کلاس با استفاده از گراف تماس، نگاشت مجوزها و تحلیل APIهای حساس، دید جامعی از عملیات حساس مبتنی بر الگو در فایل APK ارائه می‌دهد. خروجی آن برای ارزیابی امنیت، تحلیل رفتار و استخراج ویژگی‌ها حیاتی است.
+
+## اتمام تولید ویژگی‌ها
+با استخراج tplها، ویژگی‌های مربوط به گراف استخراج شدند. حال به تابع `generate_behavior_subgraph` می‌پردازیم. 
+```python
+def generate_behavior_subgraph(apk_base, db_name, output_dir, deepth, label, hop=2, tpl=True, training=False, api_map=False):
+    '''
+    <output_dir>/<db_name>/decompile/<apk_name>/call.gml
+    <output_dir>/<db_name>/result/<permission | opcode | tpl>/<apk_name>.csv
+    '''
+    call_graphs = generate_feature(apk_base, db_name, output_dir, deepth)   # `.gml`
+    call_graphs.sort()
+    print("call graph", call_graphs)
+    '''
+    <output_dir>/<db_name>/processed/data_<apk_id>_<subgraph_id>.pt
+    '''
+    gml_base = f'{output_dir}/{db_name}'
+    generate_graph(call_graphs, output_dir, gml_base, db_name, label, hop, tpl, training, api_map)
+    return call_graphs
+```
+
+در ادامه داریم که:
+```python
+call_graphs.sort()
+```
+در واقع مسیر این گراف‌های فراخوانی به صورت الفبایی مرتب می‌گردد.
+در ادامه باید تابع `generate_graph` بررسی گردد.
+
+# تابع `generate_graph`
+جریان اجرا در این تابع به صورت زیر است:
+```bash
+generate_graph()
+   ├── Compute `exp_dir`
+   ├── Initialize `MyOwnDataset`
+   │     ├── Process raw `.gml` files
+   │     ├── Generate subgraphs for each call graph
+   │     ├── Map APIs and prune TPL nodes if required
+   │     └── Save subgraphs as `.pt` files
+   └── Return control
+```
+
