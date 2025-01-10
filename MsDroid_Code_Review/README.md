@@ -1329,8 +1329,17 @@ i = 0
 s = functions.get(i)
 s = node2function(s)
 ```
- در ابتدا نام متد مربوط به گره i را می‌گیرد و سپس فرم استاندارد آن را خروجی می‌دهد. نتیجه این بخش می‌تواند مانند زیر باشد:
+ در ابتدا نام متد مربوط به گره `i` را می‌گیرد و سپس فرم استاندارد آن را خروجی می‌دهد. نتیجه این بخش می‌تواند مانند زیر باشد:
 ```bash
  Function get:  <analysis.MethodAnalysis Landroid/support/v4/app/BackStackState;-><init>(Landroid/os/Parcel;)V [access_flags=public constructor] @ 0x68274>
 Node to Function:  Landroid/support/v4/app/BackStackState;-><init>(Landroid/os/Parcel;)V
+```
+
+در قسمت بعدی کد داریم که:
+```python
+p = self.count_permission(s, per_map)
+```
+این بخش از کد وجود مجوزهای یک گره را می‌سنجد و در `p` ذخیره می‌نماید. اگر باشد، 1 و اگر نباشد، 0 برای هر مجوز ذخیره می‌گردد:
+```bash
+p = {"Permission:READ_CONTACTS": 0, "Permission:SEND_SMS": 0}
 ```
