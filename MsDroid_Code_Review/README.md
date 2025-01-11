@@ -1645,3 +1645,6 @@ def generate_graph(call_graphs, output_dir, apk_base, db_name, label, hop=2, tpl
 ```bash
 ./training/Graphs/<db_name>/HOP_<hop>/TPL_<tpl>/processed/data_<apk_id>_<subgraph_id>.pt
 ```
+
+## بررسی MyOwnDataset
+کلاس MyOwnDataset که در فایل behavior_subgraph.py تعریف شده است، یک کلاس داده‌ای سفارشی برای مدیریت پردازش و ذخیره‌سازی داده‌های مبتنی بر گراف است. این کلاس از Dataset در PyTorch Geometric به عنوان پایه استفاده می‌کند و متد initialization (`__init__`) آن عملیات مختلفی را برای تولید، پردازش و مدیریت زیرگراف‌ها از گراف‌های فراخوانی ورودی انجام می‌دهد.
