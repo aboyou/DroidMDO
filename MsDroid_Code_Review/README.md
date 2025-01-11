@@ -1631,3 +1631,11 @@ generate_graph()
    └── Return control
 ```
 
+و کد این تابع به صورت زیر است:
+```python
+def generate_graph(call_graphs, output_dir, apk_base, db_name, label, hop=2, tpl=True, training=False, api_map=False):
+    exp_dir = f'./training/Graphs/{db_name}/HOP_{hop}/TPL_{tpl}' if training else osp.join(output_dir, db_name)
+    MyOwnDataset(root=exp_dir, label=label, tpl=tpl, hop=hop, db=db_name, base_dir=apk_base, apks=call_graphs, api_map=api_map)
+```
+
+در ابتدا متغیر `exp_dir` محاسبه می‌گردد که گراف‌ها و زیرگراف‌ها(نتایج) در این دایرکتوری ذخیره می‌گردند. یعنی در واقع برای training، این دایرکتوری شامل دیتاستی از گراف‌هاست.
