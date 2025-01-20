@@ -2201,3 +2201,83 @@ class MyOwnDataset(Dataset):
 - **`layer`**: پارامتر اختیاری برای کشف سریع‌تر فایل‌های `.gml`.
 - **`api_map`**: آیا نگاشت API به گره‌های گراف در زیرگراف‌ها گنجانده شود یا خیر.
 
+### **2. جریان مقداردهی اولیه**
+
+#### 1. تنظیم ویژگی‌ها
+
+- سازنده تمام پارامترهای ارائه‌شده را به‌عنوان ویژگی‌های نمونه تنظیم می‌کند (`self.label`, `self.tpl` و غیره).
+- ویژگی‌هایی مانند `self.lens` و `self.samples` برای ردیابی آمار مجموعه داده مقداردهی می‌شوند.
+
+#### 2. مقداردهی اولیه کلاس والد
+
+- فراخوانی `super().__init__(root, transform, pre_transform)` کلاس والد `Dataset` را مقداردهی می‌کند.
+    - مسیرهای داده خام و پردازش‌شده را تنظیم می‌کند:
+        - `self.raw_dir`: مسیر داده‌های خام.
+        - `self.processed_dir`: مسیر داده‌های پردازش‌شده.
+    - مدیریت مناسب تبدیل‌ها از طریق `transform` و `pre_transform` را تضمین می‌کند.
+
+### 3. نمونه استفاده
+
+#### ایجاد نمونه از مجموعه داده
+```python
+dataset = MyOwnDataset(
+    root='./data',
+    tpl=True,
+    hop=2,
+    db='Androzoo',
+    base_dir='./datasets',
+    label=1,
+    transform=NormalizeFeatures(),
+    pre_transform=AddSelfLoops()
+)
+```
+
+## بررسی `raw_paths`
+متد `raw_paths` در کلاس `MyOwnDataset` یک **ویژگی (property)** است که لیستی از فایل‌های ورودی خام (مثلاً فایل‌های `.gml`) را که باید برای ایجاد مجموعه داده پردازش شوند، ارائه می‌دهد. این متد بخشی حیاتی از جریان کاری کلاس `Dataset` در PyTorch Geometric است، زیرا مشخص می‌کند مجموعه داده چگونه داده‌های خام خود را مکان‌یابی و مدیریت کند.
+```python
+@property
+def raw_paths(self):
+    """
+    فایل‌های خام مورد نیاز برای تبدیل به فرمت PyTorch Geometric Data را بازمی‌گرداند.
+    """
+    if self.apks is None:
+        db = self.db  # استفاده از نام پایگاه داده
+        db_record = f'{self.base_dir}/{db}.csv'  # مسیر فایل CSV که لیست فایل‌های `.gml` را دارد
+        if not osp.isfile(db_record):  # اگر فایل وجود نداشته باشد
+            print('[GraphDroid] Searching db for `.gml` files.')
+            self.apks = get_db_gml(base_dir=self.base_dir, db=db, layer=self.layer)  # جستجوی فایل‌های `.gml`
+            self.apks.to_csv(db_record, header=False, index=None)  # ذخیره مسیرها برای استفاده مجدد
+        else:
+            print(f'[GraphDroid] Read existing data csv: {db_record}')
+            self.apks = pd.read_csv(db_record, header=None)[0]  # بارگذاری مسیرهای `.gml` از فایل CSV
+    else:
+        self.apks = pd.Series(self.apks)  # اگر `apks` ارائه شده باشد، مستقیماً از آن استفاده می‌شود
+    return self.apks
+```
+
+1. **هدف**:
+    
+    - این متد فایل‌های ورودی خام (مانند `.gml`) مورد نیاز برای پردازش و ایجاد مجموعه داده را شناسایی می‌کند.
+    - بررسی می‌کند که آیا لیستی از فایل‌های خام از قبل وجود دارد یا خیر و در صورت عدم وجود، آن‌ها را به صورت پویا کشف می‌کند.
+2. **مراحل**:
+    
+    - **اگر `self.apks` برابر `None` باشد**:
+        
+        - بررسی می‌کند که آیا فایل CSV (`db_record`) شامل لیست مسیرهای فایل‌های `.gml` وجود دارد یا خیر.
+        - اگر فایل CSV وجود نداشته باشد:
+            - تابع `get_db_gml` برای جستجوی فایل‌های `.gml` در دایرکتوری پایگاه داده (`self.base_dir`) فراخوانی می‌شود.
+            - مسیرهای پیدا شده در یک فایل CSV ذخیره می‌شوند.
+        - اگر فایل CSV وجود داشته باشد:
+            - مسیرهای فایل‌های `.gml` از CSV خوانده می‌شوند.
+    - **اگر `self.apks` ارائه شده باشد**:
+        
+        - مستقیماً از لیست داده شده به‌عنوان مسیر فایل‌های خام استفاده می‌شود.
+3. **خروجی**:
+    - یک سری از مسیرهای فایل‌های `.gml` در قالب `Pandas Series`.
+
+خروجی این قسمت به صورت زیر است که یک `Pandas Series` شامل آدرس call graph ها است:
+```bash
+0    /home/user/MsDroid2/MsDroid-main/src/Output/Te...
+1    /home/user/MsDroid2/MsDroid-main/src/Output/Te...
+2    /home/user/MsDroid2/MsDroid-main/src/Output/Te...
+```
