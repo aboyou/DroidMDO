@@ -2007,7 +2007,7 @@ if __name__ == '__main__':
 - **بارگذاری داده‌ها**: فراهم کردن دسترسی آسان به گراف‌های تکی یا دسته‌ها در حین آموزش یا ارزیابی.
 
 ### متدهای کلیدی در کلاس `Dataset`
-1. مقداردهی اولیه (`__init__`)**
+1. مقداردهی اولیه (`__init__`)
 متد `__init__` با تعریف ویژگی‌ها و مسیرهای ضروری مجموعه داده را تنظیم می‌کند.
 ```python
 class MyDataset(Dataset):
@@ -2017,3 +2017,94 @@ class MyDataset(Dataset):
 - **`root`**: مسیری که مجموعه داده در آن ذخیره یا پردازش می‌شود.
 - **`transform`**: تبدیل‌های اختیاری که هنگام بارگذاری بر هر شیء گراف اعمال می‌شوند.
 - **`pre_transform`**: تبدیل‌های اختیاری که قبل از ذخیره داده‌های پردازش‌شده اعمال می‌شوند (مانند نرمال‌سازی ویژگی‌ها).
+
+#### متدهای `raw_file_names` و `processed_file_names`
+
+- **`raw_file_names`**: لیستی از فایل‌های ورودی خام موردنیاز برای پردازش را بازمی‌گرداند.
+- **`processed_file_names`**: لیستی از فایل‌های پردازش‌شده را که بعداً بارگذاری می‌شوند بازمی‌گرداند.
+
+```python
+@property
+def raw_file_names(self):
+    return ['graph1.gml', 'graph2.gml']
+
+@property
+def processed_file_names(self):
+    return ['data_0.pt', 'data_1.pt']
+```
+
+#### 3. `download`
+اگر مجموعه داده به‌صورت محلی موجود نباشد، این متد آن را دانلود می‌کند.
+```python
+def download(self):
+    # دانلود مجموعه داده از یک URL
+    download_url('http://example.com/dataset.zip', self.raw_dir)
+    extract_zip(self.raw_dir)
+```
+
+#### 4. `process`
+متد `process` داده‌های خام را به اشیای پردازش‌شده `Data` در PyG تبدیل می‌کند. این مرحله مهم‌ترین بخش است.
+```python
+def process(self):
+    for raw_path in self.raw_paths:
+        # بارگذاری داده‌های خام (مانند GML یا JSON)
+        graph = nx.read_gml(raw_path)
+        # تبدیل به قالب Data در PyG
+        data = Data(
+            x=torch.tensor(...),   # ویژگی‌های گره‌ها
+            edge_index=torch.tensor(...),  # شاخص‌های یال‌ها
+            y=torch.tensor(...)    # برچسب‌ها
+        )
+        # ذخیره داده‌های پردازش‌شده
+        torch.save(data, self.processed_paths[index])
+```
+#### 5. `len`
+تعداد گراف‌های موجود در مجموعه داده را بازمی‌گرداند.
+```python
+def len(self):
+    return len(self.processed_file_names)
+```
+
+#### 6. `get`
+یک شیء گراف تکی را از مجموعه داده پردازش‌شده بارگذاری و بازمی‌گرداند.
+```python
+def get(self, idx):
+    return torch.load(self.processed_paths[idx])
+```
+
+### نمونه پیاده‌سازی یک مجموعه داده در PyG
+```python
+from torch_geometric.data import Dataset, Data
+
+class MyDataset(Dataset):
+    def __init__(self, root, transform=None, pre_transform=None):
+        super().__init__(root, transform, pre_transform)
+
+    @property
+    def raw_file_names(self):
+        return ['graph1.gml', 'graph2.gml']
+
+    @property
+    def processed_file_names(self):
+        return ['data_0.pt', 'data_1.pt']
+
+    def process(self):
+        for i, raw_path in enumerate(self.raw_paths):
+            # تبدیل گراف خام به قالب Data در PyG
+            graph = nx.read_gml(raw_path)
+            data = Data(
+                x=torch.tensor(...),  # ویژگی‌های گره‌ها
+                edge_index=torch.tensor(...),  # شاخص‌های یال‌ها
+                y=torch.tensor(...)  # برچسب‌ها
+            )
+            torch.save(data, self.processed_paths[i])
+
+    def len(self):
+        return len(self.processed_file_names)
+
+    def get(self, idx):
+        return torch.load(self.processed_paths[idx])
+
+dataset = MyDataset(root='./data')
+```
+
