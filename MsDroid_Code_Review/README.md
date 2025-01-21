@@ -2342,3 +2342,8 @@ def _process(self):
         
         tqdm.write(f'[GraphDroid] Data generated in `{self.root}/processed/`.')
 ```
+
+زمانی که به دنبال وجود یا عدم وجود `self.processed_paths` می‌گردد، این مقدار برای مثال ما که یک دیتابیس 3 تایی است، برابر است با:
+```bash
+['training/Graphs/Test_DB/HOP_2/TPL_True/processed/data_0_0.pt', 'training/Graphs/Test_DB/HOP_2/TPL_True/processed/data_1_0.pt', 'training/Graphs/Test_DB/HOP_2/TPL_True/processed/data_2_0.pt']
+```
