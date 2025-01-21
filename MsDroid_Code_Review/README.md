@@ -2281,3 +2281,64 @@ def raw_paths(self):
 1    /home/user/MsDroid2/MsDroid-main/src/Output/Te...
 2    /home/user/MsDroid2/MsDroid-main/src/Output/Te...
 ```
+
+پس از اجرای متد raw_paths و بدست آوردن آدرس فایل‌های `.gml`، متد `processed_file_names` اجرا می‌شود که آیا این فایل‌‌های خام پردازش شده‌اند یا نه!
+## بررسی `processed_file_names`
+متد **`processed_file_names`** در کلاس `MyOwnDataset` یک ویژگی (property) است که نام فایل‌های پردازش‌شده (مثلاً فایل‌های `.pt`) را که مجموعه داده انتظار دارد در دایرکتوری `processed` وجود داشته باشند، مشخص می‌کند. این فایل‌ها در مرحله‌ی `process()` مجموعه داده ایجاد می‌شوند و برای بارگذاری داده‌های پیش‌پردازش‌شده به صورت کارآمد استفاده می‌شوند.
+```python
+@property
+def processed_file_names(self):
+    """
+    نام فایل‌های پردازش‌شده `.pt` در دایرکتوری processed را بازمی‌گرداند.
+    این فایل‌ها پس از پردازش فایل‌های خام `.gml` تولید می‌شوند.
+    """
+    ex_map = f'./mappings/{self.db}_2_True.csv'
+    if osp.exists(ex_map):
+        print(f'[GraphDroid] Read existing mapping csv: {ex_map}')
+        df = pd.read_csv(ex_map)
+        return [f'data_{v.graph_id}_{v.subgraph_id}.pt' for _, v in df.iterrows()]
+    return [f'data_{i}_0.pt' for i in range(len(self.apks))]
+```
+
+این متد لیستی از فایل‌های `.pt` را که باید در دایرکتوری `processed` وجود داشته باشند، مشخص می‌کند. این فایل‌ها به زیرگراف‌هایی مربوط هستند که از فایل‌های خام `.gml` در مرحله‌ی `process()` ایجاد شده‌اند.
+به دنبال یک فایل CSV (`./mappings/{self.db}_2_True.csv`) می‌گردد که مشخص می‌کند کدام فایل‌های پردازش‌شده مورد نیاز هستند.
+اگر فایل وجود داشته باشد:
+- فایل CSV را به یک DataFrame می‌خواند.
+- نام فایل‌ها را بر اساس ستون‌های `graph_id` و `subgraph_id` در فایل CSV می‌سازد.
+در مثال ما نام این فایل csv عبارت است از:
+```bash
+./mappings/Test_DB_2_True.csv
+```
+
+اگر فایل CSV وجود نداشته باشد:
+- لیستی پیش‌فرض از نام فایل‌ها تولید می‌کند که فرض می‌کند هر فایل خام `.gml` یک زیرگراف تولید می‌کند:
+```python
+['data_0_0.pt', 'data_1_0.pt', ..., 'data_N_0.pt']
+```
+## متد `process_`
+بعد از **`processed_file_names`** در کلاس `MyOwnDataset` متد **`process_`** است که مسئول پردازش داده‌های خام به فرمت `Data` در PyTorch Geometric و ذخیره آن‌ها به‌صورت فایل‌های پردازش‌شده است.
+این متد بررسی می‌کند که آیا فایل‌های پردازش‌شده از قبل وجود دارند یا خیر. در صورت عدم وجود، فایل‌های خام را به زیرگراف‌ها پردازش می‌کند. زیرگراف‌های پردازش‌شده را به صورت فایل‌های `.pt` در دایرکتوری `processed` ذخیره می‌کند.
+```python
+def _process(self):
+    def files_exist(files):
+        return len(files) != 0 and all([osp.exists(f) for f in files])
+
+    apps = self.raw_paths  # دریافت مسیر فایل‌های خام `.gml`
+    if files_exist(self.processed_paths):  # بررسی وجود تمام فایل‌های پردازش‌شده
+        print(f'[GraphDroid] Data found in `{self.root}/processed`. Skip processing.')
+    else:
+        if glob.glob(f'{self.root}/processed/data_*.pt'):  # اگر برخی فایل‌های پردازش‌شده وجود داشته باشند
+            apps, graph_ids = self._exclude_exists()  # حذف فایل‌های پردازش‌شده از پردازش بیشتر
+        else:
+            graph_ids = list(range(len(apps)))  # اختصاص ID‌های منحصربه‌فرد به فایل‌های خام
+
+        makedirs(self.processed_dir)  # اطمینان از وجود دایرکتوری `processed`
+        self.process(apps, graph_ids)  # پردازش فایل‌های خام به فایل‌های پردازش‌شده
+        
+        if self.api_map:  # در صورت فعال بودن: نگاشت API به گره‌ها
+            from graph.dbmap import form_dataset
+            max_gid, _ = self.len()  # محاسبه تعداد فایل‌های پردازش‌شده
+            form_dataset(self.db, self.hop, self.tpl, max_gid)
+        
+        tqdm.write(f'[GraphDroid] Data generated in `{self.root}/processed/`.')
+```
