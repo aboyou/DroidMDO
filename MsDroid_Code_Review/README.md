@@ -2347,3 +2347,4 @@ def _process(self):
 ```bash
 ['training/Graphs/Test_DB/HOP_2/TPL_True/processed/data_0_0.pt', 'training/Graphs/Test_DB/HOP_2/TPL_True/processed/data_1_0.pt', 'training/Graphs/Test_DB/HOP_2/TPL_True/processed/data_2_0.pt']
 ```
+چرا که در نظر دارد اگر پردازشی اتفاق افتاده باشد، برای هر گراف، حداقل یک زیرگراف تولید شده است و آن هم زیرگراف `data_N_0` است.
