@@ -2406,4 +2406,4 @@ def get_sep(self, example):
 zip_args = [(apps[0], graph_ids[0]), (apps[1], graph_ids[1]), ...]
 ```
 
-و سپس با استفاده از `functools.partial` تابع `partial_func` ایجاد می‌شود که پارامترهای ثابت (مانند `tpl`, `hop`) را به تابع `process_apk_wrapper` ارسال می‌کند.
+و سپس با استفاده از `functools.partial` تابع `partial_func` ایجاد می‌شود که پارامترهای ثابت (مانند `tpl`, `hop`) را به تابع `process_apk_wrapper` ارسال می‌کند. تابع `process_apk_wrapper` یک فایل APK یا فایل خام را پردازش می‌کند. 
