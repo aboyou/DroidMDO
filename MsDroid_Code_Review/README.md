@@ -2348,3 +2348,62 @@ def _process(self):
 ['training/Graphs/Test_DB/HOP_2/TPL_True/processed/data_0_0.pt', 'training/Graphs/Test_DB/HOP_2/TPL_True/processed/data_1_0.pt', 'training/Graphs/Test_DB/HOP_2/TPL_True/processed/data_2_0.pt']
 ```
 چرا که در نظر دارد اگر پردازشی اتفاق افتاده باشد، برای هر گراف، حداقل یک زیرگراف تولید شده است و آن هم زیرگراف `data_N_0` است.
+اگر برخی فایل‌های پردازش‌شده وجود داشته باشند (`data_*.pt`)، متد **`_exclude_exists`** فایل‌های خامی را که هنوز پردازش نشده‌اند شناسایی می‌کند.
+اگر هیچ فایل پردازش‌شده‌ای وجود نداشته باشد، به تمام فایل‌های خام ID‌های منحصربه‌فرد اختصاص می‌دهد.
+
+پس از بررسی فایل‌های پردازش موجود و بررسی وجود دایرکتوری، متد `process` فراخوانی می‌گردد.
+## بررسی متد `process`
+متد **`process`** در کلاس `MyOwnDataset` بخش حیاتی از چرخه حیات مجموعه داده است. این متد وظیفه تبدیل فایل‌های داده خام (مانند فایل‌های `.gml` که نمایانگر گراف‌های فراخوانی هستند) به اشیای داده‌ای پردازش‌شده در قالب `Data` در PyTorch Geometric و ذخیره آن‌ها در دایرکتوری `processed` را بر عهده دارد.
+```python
+def process(self, apps, graph_ids):
+    print("apps content:", apps)
+    print("apps index:", apps.index)
+    
+    # بررسی طول ویژگی‌ها برای اشکال‌زدایی یا تحلیل
+    self.get_sep(apps[0])
+    
+    # مرتب‌سازی فایل‌های خام برای یکپارچگی در پردازش
+    apps = apps.sort_values()
+    zip_args = list(zip(apps, graph_ids))  # جفت کردن هر اپ با ID گراف مربوطه
+    
+    logging.info(f'Processing {len(zip_args)} apps...')
+    
+    # تابع جزئی برای پردازش فایل‌های APK به‌صورت جداگانه
+    partial_func = partial(
+        process_apk_wrapper, 
+        label=self.label, 
+        tpl=self.tpl, 
+        hop=self.hop, 
+        base_dir=self.base_dir, 
+        processed_dir=self.processed_dir
+    )
+    
+    # استفاده از پردازش موازی برای پردازش فایل‌های APK
+    self.samples, self.lens = mp_process(partial_func, zip_args)
+    
+    logging.info(f'Total app samples: {self.samples}, total behavior subgraphs: {self.lens}')
+```
+
+پارامترهای ورودی:
+- آرگومان `apps`: لیست یا سری Pandas شامل مسیرهای فایل‌های خام `.gml` برای پردازش.
+- آرگومان `graph_ids`: شناسه‌های منحصربه‌فرد اختصاص داده شده به هر فایل گراف خام برای نام‌گذاری فایل‌های پردازش‌شده.
+
+در ابتدای این متد، تابع `get_sep` اجرا می‌گردد. کد این تابع:
+```python
+def get_sep(self, example):
+    fwords = ['permission', 'opcode']  # Define feature types to analyze
+    flens = get_feature(example, fwords=fwords, getsep=True, base_dir=self.base_dir)
+    with open(f'{self.root}/FeatureLen.txt', 'w') as f:
+        f.write(str(flens))
+```
+ورودی این تابع آدرس یک فایل `.gml` است و خروجی آن فایل `FeatureLen.txt` است که ابعاد ویژگی‌ها را عنوان می‌کند:
+```bash
+[length_of_permissions, length_of_opcodes]
+```
+
+در ادامۀ متد `process`، یک لیست از تاپل‌ها ایجاد می‌شود که هر تاپل شامل یک مسیر فایل خام و ID گراف مربوطه است:
+```bash
+zip_args = [(apps[0], graph_ids[0]), (apps[1], graph_ids[1]), ...]
+```
+
+و سپس با استفاده از `functools.partial` تابع `partial_func` ایجاد می‌شود که پارامترهای ثابت (مانند `tpl`, `hop`) را به تابع `process_apk_wrapper` ارسال می‌کند.
