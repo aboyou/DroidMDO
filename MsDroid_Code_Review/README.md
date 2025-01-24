@@ -2557,3 +2557,33 @@ x:
 
 [8915 rows x 270 columns]]
 ```
+
+در ادامه تمام ویژگی‌ها با هم ادغام می‌گردند. برای مثال داریم اگر ویژگی‌های استخراج‌شده به صورت زیر باشند:
+```bash
+Permissions:
+id   READ_SMS  ACCESS_FINE_LOCATION
+0    1         0
+1    0         1
+2    0         0
+```
+
+```bash
+Opcodes:
+id   const/4  invoke-direct  return-void
+0    2        1             0
+1    0        2             1
+2    1        0             1
+```
+
+```bash
+TPL:
+id   tpl_1  tpl_2
+0    0      1
+1    1      0
+2    0      0
+```
+
+خواهیم داشت:
+```bash
+
+```
