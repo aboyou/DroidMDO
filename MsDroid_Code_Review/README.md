@@ -2407,3 +2407,153 @@ zip_args = [(apps[0], graph_ids[0]), (apps[1], graph_ids[1]), ...]
 ```
 
 و سپس با استفاده از `functools.partial` تابع `partial_func` ایجاد می‌شود که پارامترهای ثابت (مانند `tpl`, `hop`) را به تابع `process_apk_wrapper` ارسال می‌کند. تابع `process_apk_wrapper` یک فایل APK یا فایل خام را پردازش می‌کند. 
+
+### بررسی تابع `process_apk_wrapper`
+تابع **`process_apk_wrapper`** در کلاس `MyOwnDataset` مسئول پردازش یک فایل APK یا گراف خام است. این تابع منطق لازم برای مدیریت فایل‌های خام `.gml` را شامل می‌شود، از جمله:
+1. خواندن فایل گراف خام.
+2. استخراج زیرگراف‌ها با تمرکز بر گره‌های خاص (مانند APIهای حساس).
+3. تبدیل زیرگراف‌ها به اشیای `Data` در PyTorch Geometric.
+4. ذخیره زیرگراف‌های پردازش‌شده به صورت فایل‌های `.pt`.
+
+```python
+def process_apk_wrapper(*args, **kwargs):
+    label = kwargs['label']
+    tpl = kwargs['tpl']
+    hop = kwargs['hop']
+    base_dir = kwargs['base_dir']
+    processed_dir = kwargs['processed_dir']
+    app = args[0]
+    graph_id = args[1]
+
+    flag = 0
+    num_subgraph = 0
+    logging.info(app)
+
+    try:
+        # پردازش فایل خام `.gml` و تولید زیرگراف‌ها
+        data_list = asyncio.run(gml2Data(app, label, tpl=tpl, hop=hop, base_dir=base_dir))
+        dlen = len(data_list)
+
+        # ذخیره هر زیرگراف تولیدشده به صورت فایل `.pt`
+        if dlen:
+            for i in range(dlen):
+                data = data_list[i]
+                data_path = osp.join(processed_dir, 'data_{}_{}.pt'.format(graph_id, i))
+                assert not osp.exists(data_path)
+                torch.save(data, data_path)
+                num_subgraph += 1
+
+            flag = 1  # پردازش موفقیت‌آمیز
+
+        logging.info(f'[Success] {app}')
+
+    except Exception:
+        logging.exception(f'{app}')  # ثبت استثناها برای اشکال‌زدایی
+
+    finally:
+        return flag, num_subgraph  # بازگشت وضعیت موفقیت و تعداد زیرگراف‌ها
+```
+
+متغیر `flag`: مشخص می‌کند که آیا پردازش موفق بوده است (0 = شکست، 1 = موفقیت). `num_subgraph`: تعداد زیرگراف‌های تولیدشده را شمارش می‌کند.
+تابع `gml2Data` فراخوانی می‌شود که:
+فایل `.gml` را می‌خواند. زیرگراف‌های k-hop را حول APIهای حساس استخراج می‌کند. لیستی از اشیای `Data` را بازمی‌گرداند که هر کدام نمایانگر یک زیرگراف هستند. در انتها زیرگراف به صورت فایل `.pt` ذخیره می‌شود.
+
+### بررسی تابع `gml2Data`
+تابع **`gml2Data`** یکی از اجزای کلیدی در پردازش است که فایل خام `.gml` (نمایانگر یک گراف فراخوانی) را به زیرگراف‌هایی تبدیل می‌کند که حول گره‌های خاص (مانند APIهای حساس) متمرکز شده‌اند. این زیرگراف‌ها در قالب اشیای `Data` در PyTorch Geometric قالب‌بندی شده‌اند.
+
+```python
+async def gml2Data(gmlfile, y, base_dir, tpl=True, sub=True, hop=2, debug=False):
+    fwords = ['permission', 'opcode', 'tpl'] if tpl else ['permission', 'opcode']
+    single_graph, x = await prepare_file(gmlfile, base_dir, fwords)  # خواندن گراف و ویژگی‌ها
+    apk_name = gmlfile.split('/decompile/')[-1][:-9]  # استخراج نام APK
+    all_nodes = pd.DataFrame(single_graph.nodes, columns=['id'])  # لیست تمام گره‌های گراف
+
+    # استخراج ویژگی‌ها
+    permission, opcodes = x[:2]
+    if tpl:
+        opcodes = pd.merge(opcodes, x[2], how='outer', on='id', suffixes=['_', '']).drop(['type_'], axis=1)
+        opcodes['type'] = opcodes['type'].fillna(2)  # نوع پیش‌فرض برای گره‌های opcode
+        opcodes = opcodes.fillna(0)
+
+    features_exist = pd.merge(permission.astype('float'), opcodes, how='outer').fillna(0).drop_duplicates('id', keep='first')
+    features = pd.merge(all_nodes, features_exist, how='outer').fillna(0)
+    features['type'] = features['type'].astype('int')  # اطمینان از اینکه نوع داده عدد صحیح است
+
+    p_list = x[0].id.tolist()  # لیست گره‌های مربوط به مجوزها
+    data_list = []
+
+    # تولید زیرگراف‌ها
+    if sub:
+        tasks = []
+        for p in p_list:
+            partial_func = partial(generate_behavior_subgraph, features=features, single_graph=single_graph, hop=hop, debug=debug, gmlfile=gmlfile, apk_name=apk_name, y=y)
+            tasks.append(partial_func(p))
+        data_list = await asyncio.gather(*tasks)
+        while None in data_list:
+            data_list.remove(None)  # حذف زیرگراف‌های ناموفق
+    else:
+        # پردازش کل گراف در صورتی که زیرگراف نیاز نباشد
+        nodes = single_graph.nodes
+        edges = single_graph.edges  # [(مبدا، مقصد، کلید)، ...]
+        edge_list = pd.DataFrame(edges).iloc[:, :-1].T.values.tolist()
+        data = Data(
+            x=torch.tensor(features.iloc[:, 1:].values.tolist(), dtype=torch.long),
+            edge_index=torch.tensor(edge_list, dtype=torch.long),
+            y=torch.tensor([y], dtype=torch.long),
+            num_nodes=len(nodes)
+        )
+        data_list.append(data)
+
+    return data_list
+```
+در ابتدا تابع `prepare_file` فراخوانی می‌شود و یک گراف در قالب NetworkX همراه ویژگی‌های آن در متغیر `x` خروجی داده می‌شود. مثلا:
+```bash
+single_graph:
+
+MultiDiGraph with 17282 nodes and 36765 edges
+```
+
+```bash
+x:
+
+[       id  Permission:android.car.permission.CAR_CAMERA  ...  Permission:ti.permission.FMRX_ADMIN  type
+0    1344                                             0  ...                                    0     1
+1    1803                                             0  ...                                    0     1
+2    2340                                             0  ...                                    0     1
+3    2346                                             0  ...                                    0     1
+4    2754                                             0  ...                                    0     1
+..    ...                                           ...  ...                                  ...   ...
+58  16784                                             0  ...                                    0     1
+59  17050                                             0  ...                                    0     1
+60  17052                                             0  ...                                    0     1
+61  17054                                             0  ...                                    0     1
+62  17055                                             0  ...                                    0     1
+
+[63 rows x 270 columns],          id  nop  move  move/from16  ...  invoke-custom/range  const-method-handle  const-method-type  type
+0         0    0     0            0  ...                    0                    0                  0     2
+1         3    0     0            0  ...                    0                    0                  0     2
+2         6    0     0            0  ...                    0                    0                  0     2
+3         7    0     0            0  ...                    0                    0                  0     2
+4         9    0     0            0  ...                    0                    0                  0     2
+...     ...  ...   ...          ...  ...                  ...                  ...                ...   ...
+12175  6339    0     0            0  ...                    0                    0                  0     2
+12176  6341    0     0            0  ...                    0                    0                  0     2
+12177  6343    0     0            0  ...                    0                    0                  0     2
+12178  6346    0     0            0  ...                    0                    0                  0     2
+12179  6349    0     0            0  ...                    0                    0                  0     2
+
+[12180 rows x 226 columns],          id  Permission:android.car.permission.CAR_CAMERA  ...  Permission:ti.permission.FMRX_ADMIN  type
+0       276                                           0.0  ...                                  0.0     3
+1       277                                           0.0  ...                                  0.0     3
+2       278                                           0.0  ...                                  0.0     3
+3       279                                           0.0  ...                                  0.0     3
+4       280                                           0.0  ...                                  0.0     3
+...     ...                                           ...  ...                                  ...   ...
+8910  17266                                           0.0  ...                                  0.0     3
+8911  17267                                           0.0  ...                                  0.0     3
+8912  17268                                           0.0  ...                                  0.0     3
+8913  17274                                           0.0  ...                                  0.0     3
+8914  17275                                           0.0  ...                                  0.0     3
+
+[8915 rows x 270 columns]]
+```
