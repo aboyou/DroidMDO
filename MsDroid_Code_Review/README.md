@@ -2622,10 +2622,69 @@ id   READ_SMS  ACCESS_FINE_LOCATION  const/4  invoke-direct  return-void  tpl_1 
 برای هر گره حساس در `p_list`، یک زیرگراف k-hop با استفاده از `generate_behavior_subgraph` استخراج می‌شود. 
 ```python
 for p in p_list:
-
             partial_func = partial(generate_behavior_subgraph, features=features, single_graph=single_graph, hop=hop, debug=debug, gmlfile=gmlfile, apk_name=apk_name, y=y)
-
             tasks.append(partial_func(p))
-
         data_list = await asyncio.gather(*tasks)
 ```
+
+تابع **`generate_behavior_subgraph`** زیرگراف‌های **k-hop** را از یک گراف فراخوانی (call graph) حول یک **گره مرکزی** خاص (مثلاً یک API حساس) استخراج می‌کند. این زیرگراف استخراج‌شده به یک شیء `Data` در PyTorch Geometric تبدیل می‌شود.
+```python
+async def generate_behavior_subgraph(p, features, single_graph, hop, debug, gmlfile, apk_name, y):
+    # داده نوع گره برای فیلتر زیرگراف‌ها
+    nodes_type = features[['id', 'type']]
+
+    # استخراج گره‌ها، یال‌ها و نگاشت API زیرگراف
+    subgraph_nodes, subgraph_edges, apimap = api_subgraph(
+        p, single_graph, nodes_type, hop=hop, debug=debug
+    )
+
+    # مدیریت گره‌های جدا شده
+    if len(subgraph_nodes) <= 1:
+        logging.warning(f'[IsolateNode] {gmlfile}: isolated node@{p}')
+        return None
+
+    # فیلتر ویژگی‌های گره زیرگراف
+    subtypes = nodes_type[nodes_type['id'].isin(subgraph_nodes)]
+    subgraph_features = features[features.id.isin(subgraph_nodes)].reset_index(drop=True)
+
+    # اطمینان از همخوانی تعداد گره‌ها
+    assert subgraph_features.shape[0] == len(subgraph_nodes)
+
+    # تبدیل یال‌ها به DataFrame
+    edges_df = pd.DataFrame(subgraph_edges).iloc[:, :-1].T
+
+    # تبدیل یال‌ها به فرمت PyTorch Geometric
+    edge_list, center, mapping = convert_subgraph_edge(edges_df.values.tolist(), subgraph_features, p)
+
+    # اطمینان از همخوانی نگاشت و لیست API
+    assert len(apimap) == len(mapping)
+    mapping = [apimap[i] for i in mapping]
+    labels = [subtypes[subtypes.id == i].type.tolist()[0] for i in mapping]
+
+    # ایجاد شیء `Data` در PyTorch Geometric
+    data = Data(
+        x=torch.tensor(subgraph_features.iloc[:, 1:-1].values.tolist(), dtype=torch.float),
+        edge_index=torch.tensor(edge_list, dtype=torch.long),
+        y=torch.tensor([y], dtype=torch.long),
+        num_nodes=len(subgraph_nodes),
+        labels=labels,
+        center=center,
+        mapping=mapping,
+        app=apk_name
+    )
+    return data
+```
+
+در ابتدا با استفاده از تابع `api_subgraph` یک زیرگراف به عمق `hop` حول گره حساس `p` استخراج می‌گردد. خروجی این قسمت برابر است با:
+```bash
+subgraph nodes:  [2050, 11269, 11399, 11274, 2059, 11276, 11277, 11278, 11283, 11412, 4760, 4761, 28, 30, 4511, 32, 9767, 9926, 2147, 617, 1651]
+```
+
+```bash
+subgraph edges:  [(11269, 11399, 108), (11399, 11283, 58), (11399, 11283, 380), (11399, 11283, 296), (11399, 4761, 328), (11399, 4761, 456), (11399, 4761, 412), (11399, 4761, 100), (11399, 11412, 108), (11399, 2050, 70), (11399, 2050, 304), (11399, 2050, 388), (11399, 32, 12), (11399, 32, 262), (11399, 32, 346), (11399, 32, 138), (11399, 32, 214), (11399, 11277, 182), (11399, 4511, 88), (11399, 4511, 316), (11399, 4511, 444), (11399, 4511, 400), (11399, 28, 372), (11399, 28, 164), (11399, 28, 240), (11399, 28, 38), (11399, 28, 288), (11399, 9767, 120), (11399, 11278, 174), (11399, 2059, 76), (11399, 11276, 196), (11399, 11274, 406), (11399, 11274, 94), (11399, 11274, 322), (11399, 11274, 450), (11399, 30, 224), (11399, 30, 352), (11399, 30, 364), (11399, 30, 144), (11399, 30, 22), (11399, 30, 156), (11399, 30, 268), (11399, 30, 280), (11399, 2147, 310), (11399, 617, 232), (11399, 617, 30), (11399, 4760, 394), (11399, 9926, 46), (11399, 1651, 248), (11283, 32, 4), (11283, 28, 46), (11283, 30, 38), (11283, 30, 30), (11283, 617, 18)]
+```
+
+```bash
+api map:  {2050: 'Ljava/io/File;-><init>(Ljava/lang/String;)V', 11269: 'Lcom/startapp/android/publish/ads/video/g;->a()V', 11399: 'Lcom/startapp/android/publish/ads/video/h;->a(Landroid/content/Context; Ljava/net/URL; Ljava/lang/String;)Ljava/lang/String;', 11274: 'Ljava/io/DataInputStream;->close()V', 2059: 'Ljava/io/File;->exists()Z', 11276: 'Ljava/io/FileOutputStream;->write([B I I)V', 11277: 'Ljava/io/DataInputStream;->read([B)I', 11278: 'Landroid/content/Context;->openFileOutput(Ljava/lang/String; I)Ljava/io/FileOutputStream;', 11283: 'Lcom/startapp/android/publish/ads/video/h;->a(Landroid/content/Context; Ljava/lang/String;)Ljava/lang/String;', 11412: 'Ljava/net/URL;->openStream()Ljava/io/InputStream;', 4760: 'Ljava/io/File;->renameTo(Ljava/io/File;)Z', 4761: 'Ljava/io/FileOutputStream;->close()V', 28: 'Ljava/lang/StringBuilder;->toString()Ljava/lang/String;', 30: 'Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;', 4511: 'Ljava/io/InputStream;->close()V', 32: 'Ljava/lang/StringBuilder;-><init>()V', 9767: 'Ljava/io/DataInputStream;-><init>(Ljava/io/InputStream;)V', 9926: 'Lcom/startapp/common/a/g;->a(Ljava/lang/String; I Ljava/lang/String;)V', 2147: 'Ljava/io/File;->delete()Z', 617: 'Ljava/lang/StringBuilder;->append(Ljava/lang/Object;)Ljava/lang/StringBuilder;', 1651: 'Landroid/util/Log;->e(Ljava/lang/String; Ljava/lang/String; Ljava/lang/Throwable;)I'}
+```
+
