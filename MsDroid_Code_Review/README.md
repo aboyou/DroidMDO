@@ -1,5 +1,5 @@
 
-# **MsDroid Code Review**
+# **MsDroid Code Review - Subgraph generation**
 برای مشاهده گیت‌هاب MsDroid به آدرس زیر می‌‌توان رجوع کرد:
 [MsDroid (TDSC'22)](https://github.com/E0HYL/MsDroid)
 
@@ -2737,3 +2737,4 @@ if hop > 2:  # هرس برای همسایگی‌های بزرگ‌تر
     ego_graph = prune(ego_graph, nodes_type, node, debug=debug)
     logging.info(f'[Prune] node {node}: {len(ego_graph.nodes)} / {ori_num}')
 ```
+
