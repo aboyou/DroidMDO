@@ -2718,6 +2718,22 @@ def api_subgraph(node, graph, nodes_type, hop=2, debug=False, apimap=True):
 ```
 
 ### 2. تقسیم‌بندی (Partitioning)
+تقسیم‌بندی در توابع **`generate_behavior_subgraph`** و **`api_subgraph`** انجام می‌شود:
 ```python
+# تولید زیرگراف حول گره مرکزی
+subgraph_nodes, subgraph_edges, apimap = api_subgraph(
+    p, single_graph, nodes_type, hop=hop, debug=debug
+)
 
+# جداسازی نوع گره‌ها با استفاده از `nodes_type`
+subtypes = nodes_type[nodes_type['id'].isin(subgraph_nodes)]
+```
+
+### 3. کاهش (Reduction)
+کاهش در توابع **`api_subgraph`** و **`prune`** انجام می‌شود:
+```python
+if hop > 2:  # هرس برای همسایگی‌های بزرگ‌تر
+    ori_num = len(ego_graph.nodes)
+    ego_graph = prune(ego_graph, nodes_type, node, debug=debug)
+    logging.info(f'[Prune] node {node}: {len(ego_graph.nodes)} / {ori_num}')
 ```
