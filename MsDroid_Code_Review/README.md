@@ -2585,5 +2585,19 @@ id   tpl_1  tpl_2
 
 خواهیم داشت:
 ```bash
+           id  Permission:android.car.permission.CAR_CAMERA  Permission:android.car.permission.CAR_HVAC  ...  invoke-custom/range  const-method-handle  const-method-type
+0          0                                           0.0                                         0.0  ...                  0.0                  0.0                0.0
+1          1                                           0.0                                         0.0  ...                  0.0                  0.0                0.0
+2          2                                           0.0                                         0.0  ...                  0.0                  0.0                0.0
+3          3                                           0.0                                         0.0  ...                  0.0                  0.0                0.0
+4          4                                           0.0                                         0.0  ...                  0.0                  0.0                0.0
+...      ...                                           ...                                         ...  ...                  ...                  ...                ...
+17277  17277                                           0.0                                         0.0  ...                  0.0                  0.0                0.0
+17278  17278                                           0.0                                         0.0  ...                  0.0                  0.0                0.0
+17279  17279                                           0.0                                         0.0  ...                  0.0                  0.0                0.0
+17280  17280                                           0.0                                         0.0  ...                  0.0                  0.0                0.0
+17281  17281                                           0.0                                         0.0  ...                  0.0                  0.0                0.0
 
+[17282 rows x 494 columns]
 ```
+
