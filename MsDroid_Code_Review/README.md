@@ -2585,6 +2585,14 @@ id   tpl_1  tpl_2
 
 خواهیم داشت:
 ```bash
+id   READ_SMS  ACCESS_FINE_LOCATION  const/4  invoke-direct  return-void  tpl_1  tpl_2
+0    1.0       0.0                  2        1             0           0      1
+1    0.0       1.0                  0        2             1           1      0
+2    0.0       0.0                  1        0             1           0      0
+```
+
+در مثال خودمان داریم:
+```bash
            id  Permission:android.car.permission.CAR_CAMERA  Permission:android.car.permission.CAR_HVAC  ...  invoke-custom/range  const-method-handle  const-method-type
 0          0                                           0.0                                         0.0  ...                  0.0                  0.0                0.0
 1          1                                           0.0                                         0.0  ...                  0.0                  0.0                0.0
