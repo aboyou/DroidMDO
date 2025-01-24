@@ -2619,3 +2619,13 @@ id   READ_SMS  ACCESS_FINE_LOCATION  const/4  invoke-direct  return-void  tpl_1 
 [1344, 1803, 2340, 2346, 2754, 4268, 4269, 4278, 4280, 4281, 4282, 4284, 4285, 4287, 4288, 4289, 4641, 7723, 7725, 7733, 7734, 9384, 9534, 9811, 9812, 9813, 10029, 10378, 10890, 10897, 10898, 11280, 11282, 11285, 11412, 12344, 12345, 12349, 12364, 12365, 12367, 12369, 13511, 13514, 13516, 13542, 13546, 13568, 13598, 13680, 13877, 14105, 14663, 15075, 15086, 15100, 16780, 16783, 16784, 17050, 17052, 17054, 17055]
 ```
 
+برای هر گره حساس در `p_list`، یک زیرگراف k-hop با استفاده از `generate_behavior_subgraph` استخراج می‌شود. 
+```python
+for p in p_list:
+
+            partial_func = partial(generate_behavior_subgraph, features=features, single_graph=single_graph, hop=hop, debug=debug, gmlfile=gmlfile, apk_name=apk_name, y=y)
+
+            tasks.append(partial_func(p))
+
+        data_list = await asyncio.gather(*tasks)
+```
