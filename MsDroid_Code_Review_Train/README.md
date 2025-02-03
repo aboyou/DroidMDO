@@ -110,3 +110,5 @@ num_apk = generate_behavior_subgraph(apk_base, db_name, output_dir, args.deepth,
 odel_config = set_train_config(batch_size=batch_size, train_rate=train_rate, global_pool=global_pool, lossfunc=lossfunc, dimension=dimension)
 ```
 
+انتظار می‌رود این تابع پیکربندی تنظیمات آموزش مدل را انجام دهد. در پارامترها، پارامتری به نام `training_rate` وجود دارد. که این پارامتر نسبت داده‌های استفاده شده برای آموزش به اعتبارسنجی/تست را مشخص می‌کند. مثلا `train_rate=0.8` به معنای استفاده از ۸۰٪ داده‌ها برای آموزش و ۲۰٪ باقی‌مانده برای اعتبارسنجی/تست است.
+همچنین پارامتر دیگر `global_pool` است. این پارامتر نوع عملیات pooling روی گراف را مشخص می‌کند. همچنین پارامتر `dimension`، اندازه لایه‌های پنهان در مدل گراف امبدینگ را تنظیم می‌کند.
