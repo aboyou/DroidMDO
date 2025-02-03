@@ -100,4 +100,13 @@ if __name__ == "__main__":
     graph_droid.train_and_test(epoch, force=force, continue_train=continue_train, dev=dev, testonly=testonly)
 ```
 
-کد بالا فایل `train.py` است که مسئولیت اجرای آموزش مدل را دارد.
+کد بالا فایل `train.py` است که مسئولیت اجرای آموزش مدل را دارد. در کد بالا در ابتدا شاهد آن هستیم که زیرگراف‌های رفتاری تولید می‌گردند.
+```python
+num_apk = generate_behavior_subgraph(apk_base, db_name, output_dir, args.deepth, label, hop=hop, tpl=tpl, training=True, api_map=True)
+```
+
+در ادامه خط زیر اجرا می‌گردد:
+```python
+odel_config = set_train_config(batch_size=batch_size, train_rate=train_rate, global_pool=global_pool, lossfunc=lossfunc, dimension=dimension)
+```
+
