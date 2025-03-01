@@ -786,3 +786,21 @@ test += datas[int(data_size * train_rate):]
 **آخرین بخش از مجموعه داده** (20%) به‌عنوان **داده‌های تست** انتخاب می‌شود.
 
 # قدم چهارم: آموزش مدل
+تابع `my_train()` مسئول **آموزش مدل GNNStack** برای پردازش داده‌های گرافی در تشخیص بدافزارهای اندرویدی است. این تابع شامل پردازش داده‌های ورودی، آموزش مدل، به‌روزرسانی وزن‌ها، محاسبه خطا و ذخیره بهترین مدل است.
+```python
+def my_train(loader, test_loader, writer, model_dict, dev=None, lossfunc=0, batch_size=64, num_epoch=1000, start_epoch=0, best=None, conv_func=None, global_pool=None, train_eps=False, dimension=128, layer_norm=False):
+```
+## مراحل اجرای تابع `my_train()`
+### 1. مقداردهی اولیه محیط آموزش
+```python
+dev = get_device(dev)
+model_logger.info('Starting Training')
+```
+
+### 2. مقداردهی اولیه مدل `GNNStack`
+```python
+num_classes = 2  # تشخیص بدافزار (0=مطمئن، 1=بدافزار)
+num_node_features = loader.dataset[0].data[0].x.shape[1]
+model = GNNStack(num_node_features, dimension, num_classes, conv_func=conv_func, global_pool=global_pool, train_eps=train_eps, layer_norm=layer_norm).to(dev)
+```
+
