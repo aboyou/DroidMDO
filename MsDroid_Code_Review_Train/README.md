@@ -222,4 +222,26 @@ odel_config = set_train_config(batch_size=batch_size, train_rate=train_rate, glo
 ✅ **نقاط بازرسی آموزش حفظ شوند** (ادامه آموزش در صورت نیاز).  
 ✅ **مسیرهای ذخیره‌سازی سازمان‌یافته باشند** (لاگ‌ها، مدل‌ها، نتایج).
 
-1️⃣ مقداردهی اولیه تنظیمات آزمایش
+## مقداردهی اولیه تنظیمات آزمایش
+```python
+class Experiment():
+    def __init__(self, trained_db, tpl, hop, norm_opcode, mask, model_config, exp_base=exp_base, graph_base=graph_base, force=False, continue_train=False, model_dict=None):
+```
+
+- اطلاعات **مجموعه داده، تنظیمات گراف و پارامترهای آموزش** را ذخیره می‌کند.
+- بررسی می‌کند که آیا **آزمایشی مشابه قبلاً اجرا شده است**.
+- اگر `continue_train=True` باشد، آموزش **از نقطه‌ای که متوقف شده بود ادامه می‌یابد**.
+
+## تنظیم مسیرهای ذخیره‌سازی (`()set_paths__`)
+```python
+def __set_paths(self):
+    makedirs(self.exp_base)
+    self.config_file = f'{self.exp_base}/exp_configs.csv'
+    columns = ['exp_id', 'trained_db', 'tpl', 'hop', 'norm_opcode', 'mask', 'model_config']
+    if not os.path.exists(self.config_file):
+        (pd.DataFrame([], columns=columns)).to_csv(self.config_file, index=False)
+```
+
+- اطمینان حاصل می‌کند که مسیرهای آزمایش (`exp_base`) ایجاد شده‌اند.
+- یک **فایل CSV (`exp_configs.csv`)** برای ذخیره تنظیمات آزمایش‌ها ایجاد می‌کند.
+
