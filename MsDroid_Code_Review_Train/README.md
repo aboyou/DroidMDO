@@ -665,3 +665,124 @@ def __set_paths(self):
 - اطمینان حاصل می‌کند که مسیرهای آزمایش (`exp_base`) ایجاد شده‌اند.
 - یک **فایل CSV (`exp_configs.csv`)** برای ذخیره تنظیمات آزمایش‌ها ایجاد می‌کند.
 
+## بررسی وجود آزمایش مشابه (()get_exp_id__`)
+
+```python
+def __get_exp_id(self):
+    configs = pd.read_csv(self.config_file)
+    exp_id = None
+    for _, v in configs.iterrows():
+        match = (eval(v.trained_db) == self.trained_db) & (v.tpl == self.tpl) & (v.hop == self.hop) & (v.norm_opcode == self.norm_opcode) & (v['mask'] == self.mask) & (eval(v.model_config) == self.model_config)
+        if match:
+            exp_id = v.exp_id
+            break
+    if exp_id is not None:
+        self.exp_id = exp_id
+```
+
+- فایل `exp_configs.csv` را خوانده و بررسی می‌کند که آیا **آزمایشی مشابه قبلاً اجرا شده است**.
+- اگر آزمایش موجود باشد، مقدار **`exp_id`** را تنظیم می‌کند.
+
+## ایجاد آزمایش جدید در صورت عدم وجود قبلی
+```python
+if self.exp_id is None or (self.force and not self.continue_train):
+    self.__create_exp(columns)
+```
+
+- اگر آزمایش قبلی پیدا نشود، یک **آزمایش جدید ایجاد می‌شود**.
+- اگر `force=True` باشد، **آزمایش قبلی بازنویسی می‌شود**.
+
+## اختصاص شناسه آزمایش (()create_exp__`)
+```python
+def __create_exp(self, columns):
+    setup_logger.info('Creating a new experiment.')
+    self.exp_id = datetime.now().strftime("%Y%m%d-%H%M%S")  # شناسه یکتا
+    configs = pd.DataFrame([[self.exp_id, self.trained_db, self.tpl, self.hop, self.norm_opcode, self.mask, self.model_config]], columns=columns)
+    configs.to_csv(self.config_file, mode='a', header=False, index=False)
+```
+
+- یک **شناسه یکتا بر اساس زمان ایجاد می‌کند**.
+- اطلاعات آزمایش جدید را **در `exp_configs.csv` ذخیره می‌کند**.
+
+## تنظیم مسیرهای ذخیره داده‌های آموزش و آزمون
+```python
+exp_data = f'{self.exp_base}/{self.exp_id}/TrainTest'
+makedirs(exp_data)
+self.exp_train = f'{exp_data}/train.pt'
+self.exp_test = f'{exp_data}/test.pt'
+self.log_path = f'{self.exp_base}/{self.exp_id}/exp_log.log'
+```
+
+مسیرهایی را برای ذخیره:
+
+- **مجموعه آموزش و آزمون** (`train.pt`, `test.pt`)
+- **لاگ‌های آزمایش** (`exp_log.log`) تنظیم می‌کند.
+
+## مدیریت مسیرهای ذخیره مدل
+```python
+self.model_path = f'{self.exp_base}/{self.exp_id}/models'
+self.get_models(last=True, model_dict=self.model_dict)
+if self.continue_train:
+    if self.last_model.split('/')[-1] != '0':
+        self.start_epoch = self.__epoch_from_log() + 1
+    else:
+        clear = True
+        ori_log = f'{self.exp_base}/{self.exp_id}/exp_log.log'
+        if os.path.exists(ori_log):
+            os.remove(ori_log)
+    self.__get_train_paths(clear=clear)
+```
+
+- یک مسیر برای **ذخیره مدل‌های آموزش‌دیده‌شده** ایجاد می‌کند.
+- اگر `continue_train=True` باشد، **آموزش از آخرین نقطه‌ای که متوقف شده بود ادامه می‌یابد**.
+
+
+# قدم سوم: تقسیم داده آموزش و آزمون (`__train_test_split`)
+
+در صورتی که فایل‌های train,pt و test.pt وجود نداشته باشد، این قسمت اجرا خواهد شد.
+بعد از **راه‌اندازی آزمایش (Experiment Setup)**، سیستم **مجموعه داده را به دو بخش آموزش و آزمون تقسیم می‌کند** تا مدل برای آموزش آماده شود.
+```python
+def __train_test_split(self, exp, testonly=False):
+    test = []
+    train = []
+    logger.info('Splitting train test set.')
+
+    for d in self.train_dbs:
+        logger.debug(d)
+        datas = get_dataset([d], self.hop, self.tpl, self.norm_opcode, self.mask, shuffle=True)
+        data_size = len(datas)
+        logger.info(f'{d}: {data_size}')
+        logger.debug(f'mask: {self.mask}, e.g., {datas[0].data}')
+
+        train_rate = self.model_config['train_rate'] 
+        test += datas[int(data_size * train_rate):]
+        
+        if testonly:  # اگر `testonly=True` باشد، همه داده‌ها برای تست استفاده می‌شوند
+            train += datas[int(data_size * train_rate):]
+            continue  
+
+        train += datas[:int(data_size * train_rate)]  # تخصیص داده‌های آموزش
+
+    torch.save(train, exp.exp_train)
+    torch.save(test, exp.exp_test)
+```
+
+## پردازش هر مجموعه داده آموزشی
+```python
+for d in self.train_dbs:
+    logger.debug(d)
+    datas = get_dataset([d], self.hop, self.tpl, self.norm_opcode, self.mask, shuffle=True)
+```
+- روی **هر مجموعه داده** در `self.train_dbs` حلقه می‌زند.
+- تابع **`get_dataset()`** را صدا می‌زند که:
+    - **مجموعه داده را بارگیری می‌کند** (`d`).
+    - **ویژگی‌های لازم را استخراج می‌کند**.
+    - **داده‌ها را به‌صورت تصادفی مرتب می‌کند**.
+
+## تخصیص داده‌های آزمون
+```python
+test += datas[int(data_size * train_rate):]
+```
+**آخرین بخش از مجموعه داده** (20%) به‌عنوان **داده‌های تست** انتخاب می‌شود.
+
+# قدم چهارم: آموزش مدل
