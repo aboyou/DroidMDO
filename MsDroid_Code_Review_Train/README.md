@@ -114,6 +114,7 @@ odel_config = set_train_config(batch_size=batch_size, train_rate=train_rate, glo
 همچنین پارامتر دیگر `global_pool` است. این پارامتر نوع عملیات pooling روی گراف را مشخص می‌کند. همچنین پارامتر `dimension`، اندازه لایه‌های پنهان در مدل گراف امبدینگ را تنظیم می‌کند.
 
 # جریان اجرای فرایند آموزش
+![[output(1).png]]
 
 ```
                  Start
