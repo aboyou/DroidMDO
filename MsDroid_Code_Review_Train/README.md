@@ -768,7 +768,7 @@ def __train_test_split(self, exp, testonly=False):
     torch.save(train, exp.exp_train)
     torch.save(test, exp.exp_test)
 ```
-
+![tartin_test_split_flow](train_test_split.png)
 ## پردازش هر مجموعه داده آموزشی
 ```python
 for d in self.train_dbs:
