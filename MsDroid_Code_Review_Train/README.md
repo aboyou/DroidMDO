@@ -117,7 +117,7 @@ odel_config = set_train_config(batch_size=batch_size, train_rate=train_rate, glo
 
 ![flow](output(1))
 
-![DroidMDO](https://github.com/aboyou/DroidMDO/blob/main/imgs/img_header2.jpg)
+![DroidMDO](output(1).png)
 
 ```
                  Start
