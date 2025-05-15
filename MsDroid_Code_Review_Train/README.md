@@ -115,7 +115,7 @@ odel_config = set_train_config(batch_size=batch_size, train_rate=train_rate, glo
 
 # جریان اجرای فرایند آموزش
 
-![[https://github.com/aboyou/DroidMDO/blob/main/MsDroid_Code_Review_Train/output(1).png]]
+![flow](output(1))
 ```
                  Start
                     │
