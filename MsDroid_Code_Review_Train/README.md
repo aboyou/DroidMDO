@@ -879,5 +879,133 @@ num_epoch, last_model = my_train(train_loader, test_loader, exp.writer, model_di
 
 ## لایۀ GNNStack
 ![GNNMSDroid](GNN_MsDroid.png)
-![GNNforward](GNN_forward.png)
- 
+## بررسی متد `forward` از کلاس `GNNStack`
+```python
+def forward(self, data):
+        x, edge_index, batch = data.x, data.edge_index, data.batch
+        if data.num_node_features == 0:
+            x = torch.ones(data.num_nodes, 1)
+
+        for i in range(self.num_layers):
+            x = self.convs[i](x, edge_index)
+            x = F.relu(x)
+            x = F.dropout(x, p=self.dropout, training=self.training)
+            if not i == self.num_layers - 1:
+                x = self.norm[i](x)
+
+        if not self.global_pool:
+            x = pyg_nn.global_mean_pool(x, batch)
+        elif self.global_pool == 'max':
+            x = pyg_nn.global_max_pool(x, batch)
+        elif self.global_pool == 'mix':
+            x1 = pyg_nn.global_mean_pool(x, batch)
+            x2 = pyg_nn.global_max_pool(x, batch)
+            x = torch.cat((x1, x2), 1)
+  
+        emb = x
+        x = self.post_mp(x)
+        out = F.log_softmax(x, dim=1)![[GNN_forward.png]]
+  
+        return emb, out
+```
+
+![forward](GNN_forward.png)
+## 🔁 تابع `forward(self, data)`
+
+### **1. ورودی‌ها:**
+
+```python
+x, edge_index, batch = data.x, data.edge_index, data.batch
+```
+
+- `x`: ویژگی گره‌ها (تنسور `num_nodes × num_features`)
+    
+- `edge_index`: لیست یال‌ها
+    
+- `batch`: برای مشخص کردن گرافی که هر گره به آن تعلق دارد
+    
+
+---
+
+### **2. بررسی ویژگی گره‌ها:**
+
+```python
+if data.num_node_features == 0:
+    x = torch.ones(data.num_nodes, 1)
+```
+
+اگر ویژگی نداشته باشند، یک بردار همه‌یک (۱) تخصیص می‌دهد.
+
+---
+
+### **3. گذر از لایه‌های GNN**
+
+```python
+for i in range(self.num_layers):
+    x = self.convs[i](x, edge_index)
+    x = F.relu(x)
+    x = F.dropout(x, p=self.dropout, training=self.training)
+    if not i == self.num_layers - 1:
+        x = self.norm[i](x)
+```
+
+- `self.convs[i]`: اعمال لایه GNN (مثلاً GIN یا GAT)
+    
+- `ReLU + Dropout`: فعال‌سازی و regularization
+    
+- `Norm[i]`: نرمال‌سازی (BatchNorm یا LayerNorm)، **فقط در دو لایه اول**
+    
+
+---
+
+### **4. Global Pooling**
+
+```python
+if not self.global_pool:
+    x = global_mean_pool(x, batch)
+elif self.global_pool == 'max':
+    x = global_max_pool(x, batch)
+elif self.global_pool == 'mix':
+    x1 = global_mean_pool(x, batch)
+    x2 = global_max_pool(x, batch)
+    x = torch.cat((x1, x2), 1)
+```
+
+- گره‌ها به بردار نماینده گراف تبدیل می‌شوند
+    
+- حالت `mix`: ترکیب mean و max
+    
+
+---
+
+### **5. Post-MLP و Softmax**
+
+```python
+emb = x
+x = self.post_mp(x)
+out = F.log_softmax(x, dim=1)
+```
+
+- `self.post_mp`: MLP نهایی با Linear → Dropout → Linear
+    
+- `emb`: نگه‌داشتن embedding نهایی گراف
+    
+- `out`: پیش‌بینی احتمال (به صورت log-softmax)
+    
+
+---
+
+## 📤 خروجی:
+
+```python
+return emb, out
+```
+
+|خروجی|توضیح|
+|---|---|
+|`emb`|بردار ویژگی نهایی گراف (برای embedding یا توضیح‌پذیری)|
+|`out`|خروجی طبقه‌بندی (log-prob برای malware/benign)|
+
+---
+
+اگر بخواهی، نسخه‌ای از این forward به صورت ساده با کد پایتورچ معمولی یا مثال داده بنویسم، کافیه اشاره کنی.
