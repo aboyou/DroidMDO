@@ -879,3 +879,5 @@ num_epoch, last_model = my_train(train_loader, test_loader, exp.writer, model_di
 
 ## لایۀ GNNStack
 ![GNNMSDroid](GNN_MsDroid.png)
+![GNNforward](GNN_forward.png)
+ 
