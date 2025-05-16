@@ -876,3 +876,6 @@ num_epoch, last_model = my_train(train_loader, test_loader, exp.writer, model_di
     - backpropagation
     - ارزیابی روی `test_loader`
 - `last_model` در پایان آماده ذخیره و استفاده در تست است.
+
+## لایۀ GNNStack
+![GNNMSDroid](GNN_MsDroid.png)
